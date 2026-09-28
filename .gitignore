@@ -1,0 +1,22 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+
+# Verified audio + manifest are committed so GitHub Pages can publish the app
+# without requiring Dropbox secrets during the first deploy.
+
+# Local sample data for `npm run sample`
+public/audio-sample/
+
+# Local secrets for running the sync script by hand
+.env
+.env.local
+
+# Local playback captures and compiled recorder
+.capture-cache/
+recordings/
+.audio-venv/
+.audio-work/
+__pycache__/

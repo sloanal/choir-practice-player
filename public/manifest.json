@@ -1,0 +1,1165 @@
+{
+  "generatedAt": "2026-09-28T22:00:02.359Z",
+  "source": "verified local Dropbox playback-stream exports",
+  "songs": [
+    {
+      "id": "because-the-night",
+      "title": "Because the Night",
+      "singing": {
+        "high": {
+          "name": "Because the night – Singing - Highers.m4a",
+          "size": 466637,
+          "contentHash": "ac07d3d1088f2428a5a44918e8493b1d436ba8771d6e6a9ff380bc5f341f7fc3",
+          "modified": "2026-09-28T20:24:39.195Z",
+          "sourcePath": "/Highers/Singing Only/Because the night – Singing - Highers.m4a",
+          "path": "audio/because-the-night/singing-high-aligned-v5-baf1fe3c82ab.m4a",
+          "rawPath": "audio/because-the-night/singing-high.m4a",
+          "sourceSize": 345029,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "baf1fe3c82ab01fd400c5d15a921d3aed5630e9439afb29eca61380ad418c2e8",
+            "method": "musical-section-keyframes",
+            "duration": 20.03,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "low": {
+          "name": "Because the night – Singing - Lowers.m4a",
+          "size": 463913,
+          "contentHash": "6e7a5ed4c2602132fb92b0f7c7ffc86b2dbf6f8f5cc701580645565af8dbb2b0",
+          "modified": "2026-09-28T20:29:00.512Z",
+          "sourcePath": "/Lowers/Singing Only/Because the night – Singing - Lowers.m4a",
+          "path": "audio/because-the-night/singing-low-aligned-v5-c2392c878e61.m4a",
+          "rawPath": "audio/because-the-night/singing-low.m4a",
+          "sourceSize": 345543,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "c2392c878e61619a29dfd5f57259c3175837e26a2a5d6b51b3475d3a8fb48685",
+            "method": "musical-section-keyframes",
+            "duration": 20.03,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 77
+          }
+        },
+        "mid": {
+          "name": "Because the night – Singing - Mids.m4a",
+          "size": 466300,
+          "contentHash": "64654985303f29ad857f2b94c4975394d80585dd04e4a815d6c7c77420dab00d",
+          "modified": "2026-09-28T20:33:38.988Z",
+          "sourcePath": "/Mids/Singing only/Because the night – Singing - Mids.m4a",
+          "path": "audio/because-the-night/singing-mid-aligned-v5-15aa8f0fbee5.m4a",
+          "rawPath": "audio/because-the-night/singing-mid.m4a",
+          "sourceSize": 346889,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "15aa8f0fbee58022ca7d77bda2b2ef740dea99c8f0c2a1d99bf02e89afd96263",
+            "method": "musical-section-keyframes",
+            "duration": 20.03,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 77
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Because the night – LEARN - Highers.m4a",
+          "size": 5399530,
+          "contentHash": "ef792d4e205d996058c4ebbcd52d1d4a9bdeac6d47db0b3c2f0d1555805f29d1",
+          "modified": "2026-09-28T20:21:07.681Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Because the night – LEARN - Highers.m4a",
+          "path": "audio/because-the-night/training-high.m4a"
+        },
+        "low": {
+          "name": "Because the night – LEARN - Lowers.m4a",
+          "size": 5115883,
+          "contentHash": "c589750bb9b6c20552e13566f16a5ba8a21e7359ef28caccd82ed64c4fdff8f3",
+          "modified": "2026-09-28T20:25:39.466Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Because the night – LEARN - Lowers.m4a",
+          "path": "audio/because-the-night/training-low.m4a"
+        },
+        "mid": {
+          "name": "Because the night – LEARN - Mids.m4a",
+          "size": 6106624,
+          "contentHash": "bb462d5fb777ad3d08dae49ca1541f2eec8acbc388714f59259f5d28a6d7392e",
+          "modified": "2026-09-28T20:30:10.880Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Because the night – LEARN - Mids.m4a",
+          "path": "audio/because-the-night/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "blinding-lights",
+      "title": "Blinding Lights",
+      "singing": {
+        "high": {
+          "name": "Blinding Lights - Singing - Highers.m4a",
+          "size": 605090,
+          "contentHash": "7c1711cce219b5597022e0ec359ac73ce05070ffe2fdf55ae7eb96dbe0b2fac6",
+          "modified": "2026-09-28T20:24:43.403Z",
+          "sourcePath": "/Highers/Singing Only/Blinding Lights - Singing - Highers.m4a",
+          "path": "audio/blinding-lights/singing-high-aligned-v5-6e0d4f9f06ce.m4a",
+          "rawPath": "audio/blinding-lights/singing-high.m4a",
+          "sourceSize": 455146,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "6e0d4f9f06ce207b4304160f7bac066e14072d76a1a87aeeace49413cc2cbd98",
+            "method": "musical-section-keyframes",
+            "duration": 25.81,
+            "referencePart": "low",
+            "sections": 1,
+            "anchors": 101
+          }
+        },
+        "low": {
+          "name": "Blinding Lights - Singing - Lowers.m4a",
+          "size": 604207,
+          "contentHash": "85c29211c6acfc60b70d56bac78eb4021e2fc327090c0cad9ef702d182f66392",
+          "modified": "2026-09-28T20:29:04.800Z",
+          "sourcePath": "/Lowers/Singing Only/Blinding Lights - Singing - Lowers.m4a",
+          "path": "audio/blinding-lights/singing-low-aligned-v5-8aac41bfaacb.m4a",
+          "rawPath": "audio/blinding-lights/singing-low.m4a",
+          "sourceSize": 431062,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "8aac41bfaacb00fc2970b17a2f874a4a871a9cdd5752c982c27144e0e7347b28",
+            "method": "musical-section-keyframes",
+            "duration": 25.81,
+            "referencePart": "low",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "mid": {
+          "name": "Blinding Lights - Singing - MIDS.m4a",
+          "size": 605815,
+          "contentHash": "f8562af8babea0db1525082da6b8ff4517776525c1927d7f98e00dc9c323f126",
+          "modified": "2026-09-28T20:33:43.505Z",
+          "sourcePath": "/Mids/Singing only/Blinding Lights - Singing - MIDS.m4a",
+          "path": "audio/blinding-lights/singing-mid-aligned-v5-5195f4f6438d.m4a",
+          "rawPath": "audio/blinding-lights/singing-mid.m4a",
+          "sourceSize": 461185,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "5195f4f6438d5a13094af2d92f51eac5287ed71804e8f7fe6b0f52c8c354766b",
+            "method": "musical-section-keyframes",
+            "duration": 25.81,
+            "referencePart": "low",
+            "sections": 1,
+            "anchors": 101
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Blinding Lights - LEARN - Highers.m4a",
+          "size": 6417438,
+          "contentHash": "c3d9225d3ce2b27b6a103eeadf826ef7354eb5ceb832a083dcfc1aa33f60ef18",
+          "modified": "2026-09-28T20:21:21.319Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Blinding Lights - LEARN - Highers.m4a",
+          "path": "audio/blinding-lights/training-high.m4a"
+        },
+        "low": {
+          "name": "Blinding Lights - LEARN - Lowers.m4a",
+          "size": 5657635,
+          "contentHash": "67c9fb032425363b39e9a86dfd2f5a3c7f0e884254232f64f4e988519d7204ce",
+          "modified": "2026-09-28T20:25:52.403Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Blinding Lights - LEARN - Lowers.m4a",
+          "path": "audio/blinding-lights/training-low.m4a"
+        },
+        "mid": {
+          "name": "Blinding Lights - LEARN - MIDS.m4a",
+          "size": 6628813,
+          "contentHash": "7e76227be507f87d08aa358a5426f17efcbde5e33c0212c645c67d014e3b639f",
+          "modified": "2026-09-28T20:30:26.350Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Blinding Lights - LEARN - MIDS.m4a",
+          "path": "audio/blinding-lights/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "clear-blue-morning",
+      "title": "Clear Blue Morning",
+      "singing": {
+        "high": {
+          "name": "Clear blue morning – Singing - Highers.m4a",
+          "size": 1415099,
+          "contentHash": "0c5121f334a6c0df5c2b7f1b80254ef2ec6df43a1870d15e43456b4ec75d4615",
+          "modified": "2026-09-28T20:24:48.618Z",
+          "sourcePath": "/Highers/Singing Only/Clear blue morning – Singing - Highers.m4a",
+          "path": "audio/clear-blue-morning/singing-high-aligned-v5-5d7d87b9f487.m4a",
+          "rawPath": "audio/clear-blue-morning/singing-high.m4a",
+          "sourceSize": 1214660,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "5d7d87b9f487cc1564ef80cee60df385fb586d6e801a41d80d42d8fc128ae9b9",
+            "method": "musical-section-keyframes",
+            "duration": 59.95,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 235
+          }
+        },
+        "low": {
+          "name": "Clear blue morning – Singing - Lowers.m4a",
+          "size": 1413820,
+          "contentHash": "b780df0c4af6094ffa87e8c21e48d8c52bb93173f2123fc75d561fe89240a3df",
+          "modified": "2026-09-28T20:29:09.993Z",
+          "sourcePath": "/Lowers/Singing Only/Clear blue morning – Singing - Lowers.m4a",
+          "path": "audio/clear-blue-morning/singing-low-aligned-v5-e9dd89a9c60f.m4a",
+          "rawPath": "audio/clear-blue-morning/singing-low.m4a",
+          "sourceSize": 1058053,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "e9dd89a9c60f47a3153c1e3dd0189e5cc4ecd8c8d489fcd28f1d8ec251beac9c",
+            "method": "musical-section-keyframes",
+            "duration": 59.95,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 4
+          }
+        },
+        "mid": {
+          "name": "Clear blue morning – Singing - MIDS.m4a",
+          "size": 1390364,
+          "contentHash": "c55c129f6793a8798f53e6c86927b82d4ae413e598cff33d5f66042f22802f54",
+          "modified": "2026-09-28T20:33:48.293Z",
+          "sourcePath": "/Mids/Singing only/Clear blue morning – Singing - MIDS.m4a",
+          "path": "audio/clear-blue-morning/singing-mid-aligned-v5-0a9a0832a961.m4a",
+          "rawPath": "audio/clear-blue-morning/singing-mid.m4a",
+          "sourceSize": 1082153,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "0a9a0832a961698e6d3def8c153cf566bb7edf48fa70734c6bb9c909bf98e388",
+            "method": "musical-section-keyframes",
+            "duration": 59.95,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 235
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Clear blue morning – LEARN - Highers.m4a",
+          "size": 10716493,
+          "contentHash": "8b558a71d16fbcd2bf9cc0d491acfaab387dce118d6747abf2170e47e76fd503",
+          "modified": "2026-09-28T20:21:41.191Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Clear blue morning – LEARN - Highers.m4a",
+          "path": "audio/clear-blue-morning/training-high.m4a"
+        },
+        "low": {
+          "name": "Clear blue morning – LEARN - Lowers.m4a",
+          "size": 7404400,
+          "contentHash": "dcd2f9f3476a577c16d8c3561e5cca9018d61847d1a05c1b1ff933e485affdde",
+          "modified": "2026-09-28T20:26:10.761Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Clear blue morning – LEARN - Lowers.m4a",
+          "path": "audio/clear-blue-morning/training-low.m4a"
+        },
+        "mid": {
+          "name": "Clear blue morning – LEARN - MIDS.m4a",
+          "size": 7634073,
+          "contentHash": "8f35e03c55ec685d42f0b4b80ef3ed2873dd89e87537da522afefd3c5d779ec2",
+          "modified": "2026-09-28T20:30:46.384Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Clear blue morning – LEARN - MIDS.m4a",
+          "path": "audio/clear-blue-morning/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "closer-to-fine",
+      "title": "Closer to Fine",
+      "singing": {
+        "high": {
+          "name": "Closer to Fine - Singing - Highers.m4a",
+          "size": 856813,
+          "contentHash": "2e213a349ddd8cf667443e4ef9aa4717b2ed883f8dd65194105d383f0832ce10",
+          "modified": "2026-09-28T20:24:53.332Z",
+          "sourcePath": "/Highers/Singing Only/Closer to Fine - Singing - Highers.m4a",
+          "path": "audio/closer-to-fine/singing-high-aligned-v5-aa436f46c3ed.m4a",
+          "rawPath": "audio/closer-to-fine/singing-high.m4a",
+          "sourceSize": 606881,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "aa436f46c3ed909df13446bfe53ca344a6180c48e531991bb0dc5ca9b6633f68",
+            "method": "musical-section-keyframes",
+            "duration": 36.17,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "low": {
+          "name": "Closer to Fine - Singing - Lowers.m4a",
+          "size": 856152,
+          "contentHash": "b08fb4b3dcc80049ebd23f09e2bbf3a934a0f8d4d3bc67d32b3b84e31ec2321e",
+          "modified": "2026-09-28T20:29:15.124Z",
+          "sourcePath": "/Lowers/Singing Only/Closer to Fine - Singing - Lowers.m4a",
+          "path": "audio/closer-to-fine/singing-low-aligned-v5-f05b1628cb11.m4a",
+          "rawPath": "audio/closer-to-fine/singing-low.m4a",
+          "sourceSize": 641126,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "f05b1628cb11d5d87ae191f26a3516280d642cf964e64a2b727c923af98a608c",
+            "method": "musical-section-keyframes",
+            "duration": 36.17,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 142
+          }
+        },
+        "mid": {
+          "name": "Closer to Fine- Singing - MIDS.m4a",
+          "size": 853407,
+          "contentHash": "907b061b91638c828374ba87895d5bc0d45306c076fbe246b3177a4544d2a9c3",
+          "modified": "2026-09-28T20:33:53.674Z",
+          "sourcePath": "/Mids/Singing only/Closer to Fine- Singing - MIDS.m4a",
+          "path": "audio/closer-to-fine/singing-mid-aligned-v5-08e00a2f7f1b.m4a",
+          "rawPath": "audio/closer-to-fine/singing-mid.m4a",
+          "sourceSize": 637724,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "08e00a2f7f1b8b40718ac751b255ddfe74950cc19c757ad10a6bc62ce3dbae3c",
+            "method": "musical-section-keyframes",
+            "duration": 36.17,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 142
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Closer to Fine - LEARN - Highers.m4a",
+          "size": 10987709,
+          "contentHash": "dcba7aac479aabe3bf34acc50e5b029ef16a60b8b4bf8f21d119d7904c966dc6",
+          "modified": "2026-09-28T20:22:04.779Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Closer to Fine - LEARN - Highers.m4a",
+          "path": "audio/closer-to-fine/training-high.m4a"
+        },
+        "low": {
+          "name": "Closer to Fine - LEARN - Lowers.m4a",
+          "size": 9693581,
+          "contentHash": "9849d206cb49c3cce6c267f354e2e532d4fe3b041a3a99c06c326857380bd66b",
+          "modified": "2026-09-28T20:26:30.152Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Closer to Fine - LEARN - Lowers.m4a",
+          "path": "audio/closer-to-fine/training-low.m4a"
+        },
+        "mid": {
+          "name": "Closer to Fine - LEARN - MIDS.m4a",
+          "size": 11576301,
+          "contentHash": "91096fc68160bf2e37ad6dd20f6ef6d2b95522f607700f9d96f0378e07160442",
+          "modified": "2026-09-28T20:31:04.516Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Closer to Fine - LEARN - MIDS.m4a",
+          "path": "audio/closer-to-fine/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "diamonds",
+      "title": "Diamonds",
+      "singing": {
+        "high": {
+          "name": "Diamonds - Singing - Highers.m4a",
+          "size": 1103925,
+          "contentHash": "abcc5ccab9a90f39f72cceeedf0baf054a2bf6df2dbc692cb755a53cb6961823",
+          "modified": "2026-09-28T20:24:57.149Z",
+          "sourcePath": "/Highers/Singing Only/Diamonds - Singing - Highers.m4a",
+          "path": "audio/diamonds/singing-high-aligned-v5-9eedc23a5998.m4a",
+          "rawPath": "audio/diamonds/singing-high.m4a",
+          "sourceSize": 800034,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "9eedc23a599843c239377d76906925604e38ccd05c61604595f2b7e16614eb2e",
+            "method": "musical-section-keyframes",
+            "duration": 46.46,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 183
+          }
+        },
+        "low": {
+          "name": "Diamonds – Singing - Lowers.m4a",
+          "size": 1101259,
+          "contentHash": "00d259f70f56f15f3ee7cc79220846e985c7efea13ebda573d4ee88047d018e6",
+          "modified": "2026-09-28T20:29:19.917Z",
+          "sourcePath": "/Lowers/Singing Only/Diamonds – Singing - Lowers.m4a",
+          "path": "audio/diamonds/singing-low-aligned-v5-da1a59b320be.m4a",
+          "rawPath": "audio/diamonds/singing-low.m4a",
+          "sourceSize": 781540,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "da1a59b320be574196310e37f17285e72eacd993f4fce7c30f7862e960961289",
+            "method": "musical-section-keyframes",
+            "duration": 46.46,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 183
+          }
+        },
+        "mid": {
+          "name": "Diamonds – Singing - Mids.m4a",
+          "size": 1103212,
+          "contentHash": "87180a1e758eadc9b529317a8c38312cbf541d64a67f45d01a1015eb4c254666",
+          "modified": "2026-09-28T20:34:22.980Z",
+          "sourcePath": "/Mids/Singing only/Diamonds – Singing - Mids.m4a",
+          "path": "audio/diamonds/singing-mid-aligned-v5-2c19ca874f9c.m4a",
+          "rawPath": "audio/diamonds/singing-mid.m4a",
+          "sourceSize": 772660,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "2c19ca874f9c8f429c2ba7e1bd39c40b88f048bf2548c9f757845ac923e7da12",
+            "method": "musical-section-keyframes",
+            "duration": 46.46,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 2
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Diamonds - LEARN - Highers.m4a",
+          "size": 7170762,
+          "contentHash": "03a66457107071e0e62d6f4946b0f28bc3063da65823db94e104eac022abedd4",
+          "modified": "2026-09-28T20:22:23.782Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Diamonds - LEARN - Highers.m4a",
+          "path": "audio/diamonds/training-high.m4a"
+        },
+        "low": {
+          "name": "Diamonds – LEARN - Lowers.m4a",
+          "size": 6959310,
+          "contentHash": "1a273e7257c164d30afeed6da05e3140d5f255e26bdeca1cde8c15af8a2e08f1",
+          "modified": "2026-09-28T20:26:45.813Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Diamonds – LEARN - Lowers.m4a",
+          "path": "audio/diamonds/training-low.m4a"
+        },
+        "mid": {
+          "name": "Diamonds – LEARN - Mids.m4a",
+          "size": 6982183,
+          "contentHash": "a5942949d0a8d4986724c9ef84766a5e53438825b70a10651bcba0c1a045e56f",
+          "modified": "2026-09-28T20:31:20.104Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Diamonds – LEARN - Mids.m4a",
+          "path": "audio/diamonds/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "fix-you-bridge",
+      "title": "Fix You (Bridge)",
+      "singing": {
+        "high": {
+          "name": "Fix You (Bridge) Singing - Highers.m4a",
+          "size": 1203574,
+          "contentHash": "cdc2545acef41c0b13ddcfa8fcbb28524f33359912b68ece9a22fed692161d24",
+          "modified": "2026-09-28T20:25:01.118Z",
+          "sourcePath": "/Highers/Singing Only/Fix You (Bridge) Singing - Highers.m4a",
+          "path": "audio/fix-you-bridge/singing-high-aligned-v5-aef62200808a.m4a",
+          "rawPath": "audio/fix-you-bridge/singing-high.m4a",
+          "sourceSize": 894195,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "aef62200808a74358921fc8ed3a53cae74b183db26dd4d9948197f80218773b9",
+            "method": "musical-section-keyframes",
+            "duration": 50.6,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 200
+          }
+        },
+        "low": {
+          "name": "Fix You (Bridge) Singing - Lowers.m4a",
+          "size": 1204480,
+          "contentHash": "1cde07efd3b6fccaf15844da6b3369b6bbfd66175a47ede10e9a6cedbf9d92e3",
+          "modified": "2026-09-28T20:29:23.307Z",
+          "sourcePath": "/Lowers/Singing Only/Fix You (Bridge) Singing - Lowers.m4a",
+          "path": "audio/fix-you-bridge/singing-low-aligned-v5-20ade7ec5759.m4a",
+          "rawPath": "audio/fix-you-bridge/singing-low.m4a",
+          "sourceSize": 852689,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "20ade7ec5759451a04a659a45cd03350ddfe76f25c5c702c4fcd73b7b08e594e",
+            "method": "musical-section-keyframes",
+            "duration": 50.6,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 200
+          }
+        },
+        "mid": {
+          "name": "Fix You (Bridge) Singing - Mids.m4a",
+          "size": 1204122,
+          "contentHash": "47849f81b9770b4a33af5f01b0837f68cb3d368a9661e3e99f309d39260b55ca",
+          "modified": "2026-09-28T20:34:27.244Z",
+          "sourcePath": "/Mids/Singing only/Fix You (Bridge) Singing - Mids.m4a",
+          "path": "audio/fix-you-bridge/singing-mid-aligned-v5-e239c1009261.m4a",
+          "rawPath": "audio/fix-you-bridge/singing-mid.m4a",
+          "sourceSize": 841668,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "e239c1009261b3f0c436e5829e11dd064908922a07295cfc9f1f1b969c7a84e8",
+            "method": "musical-section-keyframes",
+            "duration": 50.6,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 2
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Fix You (Bridge) LEARN - Highers.m4a",
+          "size": 10511498,
+          "contentHash": "cb656161ee56187b455694a57dc17d087092062aec564dd32523cc1e42f40c33",
+          "modified": "2026-09-28T20:22:43.639Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Fix You (Bridge) LEARN - Highers.m4a",
+          "path": "audio/fix-you-bridge/training-high.m4a"
+        },
+        "low": {
+          "name": "Fix You (Bridge) LEARN - Lowers.m4a",
+          "size": 12576494,
+          "contentHash": "4b19d6b4758a185bcba10e51b2edae8be50103dc60f3f7b0ae95d0b44c18a257",
+          "modified": "2026-09-28T20:27:05.312Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Fix You (Bridge) LEARN - Lowers.m4a",
+          "path": "audio/fix-you-bridge/training-low.m4a"
+        },
+        "mid": {
+          "name": "Fix You (Bridge) LEARN - Mids.m4a",
+          "size": 11797798,
+          "contentHash": "a5b7eb3b0bd4eff0fbeb4d4cc3845401a406e8a4a405c6bd51ff7774cdf33adf",
+          "modified": "2026-09-28T20:31:38.302Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Fix You (Bridge) LEARN - Mids.m4a",
+          "path": "audio/fix-you-bridge/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "fix-you-chorus",
+      "title": "Fix You (Chorus)",
+      "singing": {
+        "high": {
+          "name": "Fix You (CHORUS) Singing - Highers.m4a",
+          "size": 508673,
+          "contentHash": "96026e58ac64eb0c6deebc01630fecc7ba442e21a4855c548651a04c06c68926",
+          "modified": "2026-09-28T20:25:04.235Z",
+          "sourcePath": "/Highers/Singing Only/Fix You (CHORUS) Singing - Highers.m4a",
+          "path": "audio/fix-you-chorus/singing-high-aligned-v5-24ae5620120e.m4a",
+          "rawPath": "audio/fix-you-chorus/singing-high.m4a",
+          "sourceSize": 369292,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "24ae5620120e666adc7cc31d9fa59173f92f8107bcec2c23404f19059b973548",
+            "method": "musical-section-keyframes",
+            "duration": 21.84,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "low": {
+          "name": "Fix You (CHORUS) Singing - Lowers.m4a",
+          "size": 509862,
+          "contentHash": "ab13710e889a82ffe9c01ed2cbdf19f0865f28616e559f14d718c441e6c2c834",
+          "modified": "2026-09-28T20:29:28.551Z",
+          "sourcePath": "/Lowers/Singing Only/Fix You (CHORUS) Singing - Lowers.m4a",
+          "path": "audio/fix-you-chorus/singing-low-aligned-v5-cdc367c49731.m4a",
+          "rawPath": "audio/fix-you-chorus/singing-low.m4a",
+          "sourceSize": 892653,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "cdc367c49731c9498b7054b8fa8f3ed54a284fcc46935e9f8279ebc65ea14663",
+            "method": "musical-section-keyframes",
+            "duration": 21.84,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 85
+          }
+        },
+        "mid": {
+          "name": "Fix You (CHORUS) Singing - Mids.m4a",
+          "size": 510796,
+          "contentHash": "eb6bfa3df787b1b20b2919ed2911ee664b58386851d83f8d9d9a22f9b47289de",
+          "modified": "2026-09-28T20:34:30.617Z",
+          "sourcePath": "/Mids/Singing only/Fix You (CHORUS) Singing - Mids.m4a",
+          "path": "audio/fix-you-chorus/singing-mid-aligned-v5-50a2bc9e82cf.m4a",
+          "rawPath": "audio/fix-you-chorus/singing-mid.m4a",
+          "sourceSize": 395198,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "50a2bc9e82cfff36049feffa5a08927da03453b1ed5209d1d08b0b5057f5ac47",
+            "method": "musical-section-keyframes",
+            "duration": 21.84,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 85
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Fix You (CHORUS) LEARN - Highers.m4a",
+          "size": 3811610,
+          "contentHash": "d420c40e74048c8ec034913c2bfaed0ee089508a17f6b9e3272442cb02460122",
+          "modified": "2026-09-28T20:22:55.571Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Fix You (CHORUS) LEARN - Highers.m4a",
+          "path": "audio/fix-you-chorus/training-high.m4a"
+        },
+        "low": {
+          "name": "Fix You (CHORUS) LEARN - Lowers.m4a",
+          "size": 6578774,
+          "contentHash": "19873fc15d04791c9aded5343429984d76ef8fbc72476c63cce7f909cf05e3dd",
+          "modified": "2026-09-28T20:27:19.959Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Fix You (CHORUS) LEARN - Lowers.m4a",
+          "path": "audio/fix-you-chorus/training-low.m4a"
+        },
+        "mid": {
+          "name": "Fix You (CHORUS) LEARN - Mids.m4a",
+          "size": 6405581,
+          "contentHash": "40cda4f1e533cb07392ffc56535a4a25b7e283d095b4a077c844575629262b25",
+          "modified": "2026-09-28T20:31:53.541Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Fix You (CHORUS) LEARN - Mids.m4a",
+          "path": "audio/fix-you-chorus/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "lay-down",
+      "title": "Lay Down",
+      "singing": {
+        "high": {
+          "name": "Lay Down - Singing -  Highers.m4a",
+          "size": 645452,
+          "contentHash": "684ae217b65553a10e658b863adc67daf6676cf17464c2311b2d540856c1f448",
+          "modified": "2026-09-28T20:25:11.669Z",
+          "sourcePath": "/Highers/Singing Only/Lay Down - Singing -  Highers.m4a",
+          "path": "audio/lay-down/singing-high-aligned-v5-14c635018456.m4a",
+          "rawPath": "audio/lay-down/singing-high.m4a",
+          "sourceSize": 674296,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "14c635018456197bb4b01cc6c68bbad4b94ec4e5407256186c62d332f96d751a",
+            "method": "musical-section-keyframes",
+            "duration": 27.47,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 107
+          }
+        },
+        "low": {
+          "name": "Lay Down - Singing - Lowers.m4a",
+          "size": 643989,
+          "contentHash": "07bb15d6d54375b93708bcd0bd5fd4d013caa9aea01a522f8d4ad2753f5536bf",
+          "modified": "2026-09-28T20:29:40.940Z",
+          "sourcePath": "/Lowers/Singing Only/Lay Down - Singing - Lowers.m4a",
+          "path": "audio/lay-down/singing-low-aligned-v5-52da7aa2b7c5.m4a",
+          "rawPath": "audio/lay-down/singing-low.m4a",
+          "sourceSize": 1021621,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "52da7aa2b7c589c502df6e456c0f342fcef28b01d806b7d18fdedd44a030f80f",
+            "method": "musical-section-keyframes",
+            "duration": 27.47,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 107
+          }
+        },
+        "mid": {
+          "name": "Lay Down - Singing -  Mids.m4a",
+          "size": 643672,
+          "contentHash": "b38accd851d347805032478b4811bc25a604b8cf9f531f90bf97015d6cf98844",
+          "modified": "2026-09-28T20:34:39.464Z",
+          "sourcePath": "/Mids/Singing only/Lay Down - Singing -  Mids.m4a",
+          "path": "audio/lay-down/singing-mid-aligned-v5-3204811226b6.m4a",
+          "rawPath": "audio/lay-down/singing-mid.m4a",
+          "sourceSize": 460963,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "3204811226b6c7dbcd88b5a012fcb5f6bc9c7184e3fe60f1f9c025d49d372092",
+            "method": "musical-section-keyframes",
+            "duration": 27.47,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 2
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Lay Down - LEARN -  Highers.m4a",
+          "size": 5515429,
+          "contentHash": "870b227df65182c89959c048772e7c6712fbc81c85c8bb7afe2946a785acdfec",
+          "modified": "2026-09-28T20:23:18.971Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Lay Down - LEARN -  Highers.m4a",
+          "path": "audio/lay-down/training-high.m4a"
+        },
+        "low": {
+          "name": "Lay Down - LEARN - Lowers.m4a",
+          "size": 5163070,
+          "contentHash": "1b46644dd1f9de6be66b3a5bd2201b0597a054221b10e3f0c89923b639fca823",
+          "modified": "2026-09-28T20:27:45.771Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Lay Down - LEARN - Lowers.m4a",
+          "path": "audio/lay-down/training-low.m4a"
+        },
+        "mid": {
+          "name": "Lay Down - LEARN -  Mids.m4a",
+          "size": 6793482,
+          "contentHash": "869b43b789b07611f425ac32e12732e6ba6aeea2e64f332647377d633ee6d08f",
+          "modified": "2026-09-28T20:32:21.747Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Lay Down - LEARN -  Mids.m4a",
+          "path": "audio/lay-down/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "lay-down-bridge",
+      "title": "Lay Down (Bridge)",
+      "singing": {
+        "high": {
+          "name": "Lay Down (BRIDGE) - Singing - Highers.m4a",
+          "size": 519626,
+          "contentHash": "b2bf56651d1f9ec99d6d43195a3a1f871187e911b9687b7b50f9e997ef59ed83",
+          "modified": "2026-09-28T20:25:06.924Z",
+          "sourcePath": "/Highers/Singing Only/Lay Down (BRIDGE) - Singing - Highers.m4a",
+          "path": "audio/lay-down-bridge/singing-high-aligned-v5-f441ebf6f0ef.m4a",
+          "rawPath": "audio/lay-down-bridge/singing-high.m4a",
+          "sourceSize": 389646,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "f441ebf6f0ef61046d72369998eb806850b72d6f9427fef4c7de1b3e48cf391c",
+            "method": "musical-section-keyframes",
+            "duration": 22.23,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 86
+          }
+        },
+        "low": {
+          "name": "Lay Down (BRIDGE) - Singing - Lowers.m4a",
+          "size": 519293,
+          "contentHash": "a9186f4c71efc520e9d5c5447f6e1e83300f95da0852e696696b3a4b9d9be594",
+          "modified": "2026-09-28T20:29:32.269Z",
+          "sourcePath": "/Lowers/Singing Only/Lay Down (BRIDGE) - Singing - Lowers.m4a",
+          "path": "audio/lay-down-bridge/singing-low-aligned-v5-b8eae4cb3aa1.m4a",
+          "rawPath": "audio/lay-down-bridge/singing-low.m4a",
+          "sourceSize": 394172,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "b8eae4cb3aa1cbb90af6321044cafee5c79e9a8732dc62618eed3c7c2c7bcfc0",
+            "method": "musical-section-keyframes",
+            "duration": 22.23,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 86
+          }
+        },
+        "mid": {
+          "name": "Lay Down (BRIDGE) - Singing - Mids.m4a",
+          "size": 520852,
+          "contentHash": "79df82dad6807b8a6fd800c3e2f574579d682092c4b91a068281a43d9636c03c",
+          "modified": "2026-09-28T20:34:35.176Z",
+          "sourcePath": "/Mids/Singing only/Lay Down (BRIDGE) - Singing - Mids.m4a",
+          "path": "audio/lay-down-bridge/singing-mid-aligned-v5-3ea4de3a9943.m4a",
+          "rawPath": "audio/lay-down-bridge/singing-mid.m4a",
+          "sourceSize": 374965,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "3ea4de3a99431b3f1e0953cd0482df8a7398b089f2df28e851d111799a546106",
+            "method": "musical-section-keyframes",
+            "duration": 22.23,
+            "referencePart": "mid",
+            "sections": 1,
+            "anchors": 2
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "Lay Down (BRIDGE) - LEARN - Highers.m4a",
+          "size": 3407309,
+          "contentHash": "bdcd5e239a8ce5bee79a5e21fec8ef106365d274f63bb53715f425eb9d05868a",
+          "modified": "2026-09-28T20:23:04.875Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/Lay Down (BRIDGE) - LEARN - Highers.m4a",
+          "path": "audio/lay-down-bridge/training-high.m4a"
+        },
+        "low": {
+          "name": "Lay Down (BRIDGE) - LEARN - Lowers.m4a",
+          "size": 3627835,
+          "contentHash": "e7410d3983009df9e43da0359d393c5edbd72702ffc6bebbf82be270a7d23916",
+          "modified": "2026-09-28T20:27:32.028Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/Lay Down (BRIDGE) - LEARN - Lowers.m4a",
+          "path": "audio/lay-down-bridge/training-low.m4a"
+        },
+        "mid": {
+          "name": "Lay Down (BRIDGE) - LEARN - Mids.m4a",
+          "size": 3385911,
+          "contentHash": "fd1b9304b0ec0af18966fcd328cd4ff87c8c71a2c643b4d972a140f83142b559",
+          "modified": "2026-09-28T20:32:05.216Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/Lay Down (BRIDGE) - LEARN - Mids.m4a",
+          "path": "audio/lay-down-bridge/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "the-chain-chorus",
+      "title": "The Chain (Chorus)",
+      "singing": {
+        "high": {
+          "name": "The chain (CHORUS) - Singing - Highers.m4a",
+          "size": 1457469,
+          "contentHash": "7427183ad10cd01cb2ffff0fdffaf947948e100229ac5730e1a49b6d89a0a0a9",
+          "modified": "2026-09-28T20:25:21.504Z",
+          "sourcePath": "/Highers/Singing Only/The chain (CHORUS) - Singing - Highers.m4a",
+          "path": "audio/the-chain-chorus/singing-high-aligned-v5-33caf4626f95.m4a",
+          "rawPath": "audio/the-chain-chorus/singing-high.m4a",
+          "sourceSize": 1137844,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "33caf4626f95abd2e55570908694b2fd3be7db068ecada37623b4ccd354afb0a",
+            "method": "musical-section-keyframes",
+            "duration": 61.57,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 242
+          }
+        },
+        "low": {
+          "name": "The chain (CHORUS) - Singing - Lowers.m4a",
+          "size": 1468170,
+          "contentHash": "861ab2f3bf4072d50a78f4d3dc7d4e31f91e7ddb277178a15ff0eb4097e0d78b",
+          "modified": "2026-09-28T20:29:51.349Z",
+          "sourcePath": "/Lowers/Singing Only/The chain (CHORUS) - Singing - Lowers.m4a",
+          "path": "audio/the-chain-chorus/singing-low-aligned-v5-078aae30c620.m4a",
+          "rawPath": "audio/the-chain-chorus/singing-low.m4a",
+          "sourceSize": 1136301,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "078aae30c62074071913f0b5f03b0a33b85c3d3d105122e84f9b97f17385aa4a",
+            "method": "musical-section-keyframes",
+            "duration": 61.57,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 4
+          }
+        },
+        "mid": {
+          "name": "The chain (CHORUS) - Singing - Mids.m4a",
+          "size": 1462034,
+          "contentHash": "9de71ea2d291a5871863b4f64e3c35b64a949f36fdc107a7a392f91b63a53fc9",
+          "modified": "2026-09-28T20:34:49.162Z",
+          "sourcePath": "/Mids/Singing only/The chain (CHORUS) - Singing - Mids.m4a",
+          "path": "audio/the-chain-chorus/singing-mid-aligned-v5-64d384390d30.m4a",
+          "rawPath": "audio/the-chain-chorus/singing-mid.m4a",
+          "sourceSize": 1199102,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "64d384390d30a1463b0b6d530105784ac390323166e67c7defbf1b51b65f9d2e",
+            "method": "musical-section-keyframes",
+            "duration": 61.57,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 242
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "The chain (CHORUS) - LEARN - Highers.m4a",
+          "size": 8416889,
+          "contentHash": "e1296858a2732ee6689947715db1592c172c2a9f2cea0e57edb814b5f2c38728",
+          "modified": "2026-09-28T20:23:56.602Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/The chain (CHORUS) - LEARN - Highers.m4a",
+          "path": "audio/the-chain-chorus/training-high.m4a"
+        },
+        "low": {
+          "name": "The chain (CHORUS) - LEARN - Lowers.m4a",
+          "size": 6471285,
+          "contentHash": "d631881f9cd27fda93c089dd9c70f317566e23510ab4ff81d46d59224ed633e6",
+          "modified": "2026-09-28T20:28:16.525Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/The chain (CHORUS) - LEARN - Lowers.m4a",
+          "path": "audio/the-chain-chorus/training-low.m4a"
+        },
+        "mid": {
+          "name": "The chain (CHORUS) - LEARN - Mids.m4a",
+          "size": 7214127,
+          "contentHash": "cb3aafc9794b09451fc73826121cf2de078e2d61d9c69e19866e03ba46faaf6b",
+          "modified": "2026-09-28T20:32:57.474Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/The chain (CHORUS) - LEARN - Mids.m4a",
+          "path": "audio/the-chain-chorus/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "the-chain-outro",
+      "title": "The Chain (Outro)",
+      "singing": {
+        "high": {
+          "name": "The chain (outro) - Singing - Highers.m4a",
+          "size": 581741,
+          "contentHash": "b5c79285a19d894e0bfcf75130132946b3cb4e0c4957ddad3b831314a2c6bf2f",
+          "modified": "2026-09-28T20:25:26.757Z",
+          "sourcePath": "/Highers/Singing Only/The chain (outro) - Singing - Highers.m4a",
+          "path": "audio/the-chain-outro/singing-high-aligned-v5-19feaf07aa99.m4a",
+          "rawPath": "audio/the-chain-outro/singing-high.m4a",
+          "sourceSize": 434685,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "19feaf07aa9946f7ba9afaf2984a295866ca160c99e025758425875bf1ffc24b",
+            "method": "musical-section-keyframes",
+            "duration": 24.88,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "low": {
+          "name": "The chain (outro) - Singing - Lowers.m4a",
+          "size": 524236,
+          "contentHash": "36f1efe951bb23cc465170eefc172fa13d14faeeac03a35d4b0b5dc9d6913c55",
+          "modified": "2026-09-28T20:29:56.705Z",
+          "sourcePath": "/Lowers/Singing Only/The chain (outro) - Singing - Lowers.m4a",
+          "path": "audio/the-chain-outro/singing-low-aligned-v5-e78fcb1e64d6.m4a",
+          "rawPath": "audio/the-chain-outro/singing-low.m4a",
+          "sourceSize": 446545,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "e78fcb1e64d630af0cd2756c08ef02a61aa378d3bcb149ab01d427d6a63e8f8d",
+            "method": "musical-section-keyframes",
+            "duration": 24.88,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 97
+          }
+        },
+        "mid": {
+          "name": "The chain (outro) - Singing - MIDS.m4a",
+          "size": 580735,
+          "contentHash": "b59ae9049e79b800ef9259524dba245f7acf1339fbbb6ee899773fb095b28fc7",
+          "modified": "2026-09-28T20:34:54.269Z",
+          "sourcePath": "/Mids/Singing only/The chain (outro) - Singing - MIDS.m4a",
+          "path": "audio/the-chain-outro/singing-mid-aligned-v5-98bab9234521.m4a",
+          "rawPath": "audio/the-chain-outro/singing-mid.m4a",
+          "sourceSize": 446739,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "98bab92345211c2dacafa317ab82ebe1e06d50d3a2c6f99a1436c6736dfb3140",
+            "method": "musical-section-keyframes",
+            "duration": 24.88,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 97
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "The chain (outro) - LEARN - Highers.m4a",
+          "size": 3143148,
+          "contentHash": "65048639a007d77d02184218c57b0e57f14635c584f8b18f14c4c31e1125c8ff",
+          "modified": "2026-09-28T20:24:11.155Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/The chain (outro) - LEARN - Highers.m4a",
+          "path": "audio/the-chain-outro/training-high.m4a"
+        },
+        "low": {
+          "name": "The chain (outro) - LEARN - Lowers.m4a",
+          "size": 2201052,
+          "contentHash": "3f685631f9982d9827bac628c909f8a05baab619bbab6a9c6681a289425b7e49",
+          "modified": "2026-09-28T20:28:29.520Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/The chain (outro) - LEARN - Lowers.m4a",
+          "path": "audio/the-chain-outro/training-low.m4a"
+        },
+        "mid": {
+          "name": "The chain (outro) - LEARN - MIDS.m4a",
+          "size": 3218436,
+          "contentHash": "e5dc860cd85e43e6d3cb1695860da5f39542bd3212a29ad45b6027dcbeeb6d6a",
+          "modified": "2026-09-28T20:33:11.238Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/The chain (outro) - LEARN - MIDS.m4a",
+          "path": "audio/the-chain-outro/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "the-chain-verses",
+      "title": "The Chain (Verses)",
+      "singing": {
+        "high": {
+          "name": "The Chain (Verses) - Singing - Highers.m4a",
+          "size": 1470184,
+          "contentHash": "d74d4bdc906d7082de35ebf9d81ef357f913815b113dd2f6165e43ad4f4541c1",
+          "modified": "2026-09-28T20:25:16.772Z",
+          "sourcePath": "/Highers/Singing Only/The Chain (Verses) - Singing - Highers.m4a",
+          "path": "audio/the-chain-verses/singing-high-aligned-v5-f3aa192cf5c5.m4a",
+          "rawPath": "audio/the-chain-verses/singing-high.m4a",
+          "sourceSize": 1048376,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "f3aa192cf5c523b9f10f3ab74b7fb33bbec5090330344c182a8d0a96d86b92b4",
+            "method": "musical-section-keyframes",
+            "duration": 62.41,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 245
+          }
+        },
+        "low": {
+          "name": "The Chain (Verses) - Singing - Lowers.m4a",
+          "size": 1473961,
+          "contentHash": "b26c03132247f6e0cbcee136b8184f9aa54208d10bef512de203a979d7128187",
+          "modified": "2026-09-28T20:29:46.202Z",
+          "sourcePath": "/Lowers/Singing Only/The Chain (Verses) - Singing - Lowers.m4a",
+          "path": "audio/the-chain-verses/singing-low-aligned-v5-656d22b87ac0.m4a",
+          "rawPath": "audio/the-chain-verses/singing-low.m4a",
+          "sourceSize": 1042685,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "656d22b87ac0272bfb0f0fe387465a1c1f536dbe16cbac6218c8615345944775",
+            "method": "musical-section-keyframes",
+            "duration": 62.41,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 4
+          }
+        },
+        "mid": {
+          "name": "The Chain (Verses) - Singing - Mids.m4a",
+          "size": 1474009,
+          "contentHash": "4169eb491e97c7bd27c50c242d37eeeaa4ad983a6eec6983f356bdeea654a38f",
+          "modified": "2026-09-28T20:34:44.398Z",
+          "sourcePath": "/Mids/Singing only/The Chain (Verses) - Singing - Mids.m4a",
+          "path": "audio/the-chain-verses/singing-mid-aligned-v5-2e28e50bd768.m4a",
+          "rawPath": "audio/the-chain-verses/singing-mid.m4a",
+          "sourceSize": 1083752,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "2e28e50bd768d00120f9438db33be6c29cdad50b03ed625c999742bff2c7c4a2",
+            "method": "musical-section-keyframes",
+            "duration": 62.41,
+            "referencePart": "low",
+            "sections": 2,
+            "anchors": 245
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "The Chain (Verses) - LEARN - Highers.m4a",
+          "size": 11154416,
+          "contentHash": "3f893e849ad385286fdace7ac153debf679e108c37310a7c44ad287718ec78a1",
+          "modified": "2026-09-28T20:23:36.431Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/The Chain (Verses) - LEARN - Highers.m4a",
+          "path": "audio/the-chain-verses/training-high.m4a"
+        },
+        "low": {
+          "name": "The Chain (Verses) - LEARN - Lowers.m4a",
+          "size": 9902390,
+          "contentHash": "fbdef72383deae9cda979cdede1dcb5de1a9bd52c040c9ef68861c78d2f99d46",
+          "modified": "2026-09-28T20:28:03.065Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/The Chain (Verses) - LEARN - Lowers.m4a",
+          "path": "audio/the-chain-verses/training-low.m4a"
+        },
+        "mid": {
+          "name": "The Chain (Verses) - LEARN - Mids.m4a",
+          "size": 10327082,
+          "contentHash": "52db73258eac153ec5c917416d8fe56423c41086b6377d90b136f1d17a0c0405",
+          "modified": "2026-09-28T20:32:42.480Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/The Chain (Verses) - LEARN - Mids.m4a",
+          "path": "audio/the-chain-verses/training-mid.m4a"
+        }
+      }
+    },
+    {
+      "id": "you-belong-with-me",
+      "title": "You Belong with Me (Chorus 1)",
+      "singing": {
+        "high": {
+          "name": "You belong w me Ch1- Singing - Highers.m4a",
+          "size": 454909,
+          "contentHash": "2dc2f928459657cd6f874879e882f92993b143d4544a1f26c6d9b279d8a1d8c7",
+          "modified": "2026-09-28T20:25:30.043Z",
+          "sourcePath": "/Highers/Singing Only/You belong w me Ch1- Singing - Highers.m4a",
+          "path": "audio/you-belong-with-me/singing-high-aligned-v5-eca8ff5155c5.m4a",
+          "rawPath": "audio/you-belong-with-me/singing-high.m4a",
+          "sourceSize": 329218,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "eca8ff5155c571e51723fc67a3882bb59909be3dd30086d79568d4e812757d97",
+            "method": "musical-section-keyframes",
+            "duration": 19.67,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "low": {
+          "name": "You belong w me Ch1- Singing - Lowers.m4a",
+          "size": 456961,
+          "contentHash": "e9dce4ce28a9b51e1b0c75f2c53675c910522685bf2ae3b8827c9806c3e22165",
+          "modified": "2026-09-28T20:30:00.283Z",
+          "sourcePath": "/Lowers/Singing Only/You belong w me Ch1- Singing - Lowers.m4a",
+          "path": "audio/you-belong-with-me/singing-low-aligned-v5-4d8a9bfd3556.m4a",
+          "rawPath": "audio/you-belong-with-me/singing-low.m4a",
+          "sourceSize": 369184,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "4d8a9bfd3556c2012873f67eff20d4173729ef686bff44b75298d6c775cc473b",
+            "method": "musical-section-keyframes",
+            "duration": 19.67,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 76
+          }
+        },
+        "mid": {
+          "name": "You belong w me Ch1 - Singing - Mids.m4a",
+          "size": 456971,
+          "contentHash": "6d0e74cec139e1079d9841641196c47260510d700f76686d2d6b311ce4286e62",
+          "modified": "2026-09-28T20:34:59.377Z",
+          "sourcePath": "/Mids/Singing only/You belong w me Ch1 - Singing - Mids.m4a",
+          "path": "audio/you-belong-with-me/singing-mid-aligned-v5-51ed2475a6d4.m4a",
+          "rawPath": "audio/you-belong-with-me/singing-mid.m4a",
+          "sourceSize": 381934,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "51ed2475a6d49e4116af11fdf9528758c4bb43f421a82d1352e4fdaab02e4061",
+            "method": "musical-section-keyframes",
+            "duration": 19.67,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 76
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "You belong with me - LEARN - Highers.m4a",
+          "size": 9903217,
+          "contentHash": "c06eb8fb91cb6fe61e36a6e6803a6e1949fb4d938eb73ece7d9688139d32da27",
+          "modified": "2026-09-28T20:24:26.391Z",
+          "sourcePath": "/Highers/LEARN - Greg Teaching/You belong with me - LEARN - Highers.m4a",
+          "path": "audio/you-belong-with-me/training-high.m4a"
+        },
+        "low": {
+          "name": "You belong with me  - LEARN - Lowers.m4a",
+          "size": 11269716,
+          "contentHash": "3dfb3a16d71f6e7781f2e856341d867b47c039cbb22bd05f01737d418fe620ee",
+          "modified": "2026-09-28T20:28:47.345Z",
+          "sourcePath": "/Lowers/LEARN - Greg Teaching/You belong with me  - LEARN - Lowers.m4a",
+          "path": "audio/you-belong-with-me/training-low.m4a"
+        },
+        "mid": {
+          "name": "You belong with me - LEARN - Mids.m4a",
+          "size": 10143841,
+          "contentHash": "715935d9d4e22dfc80e30be2f89d65453ecf7fc3c61ba15905213d8d727c9f0f",
+          "modified": "2026-09-28T20:33:25.911Z",
+          "sourcePath": "/Mids/LEARN - Greg teaching/You belong with me - LEARN - Mids.m4a",
+          "path": "audio/you-belong-with-me/training-mid.m4a"
+        }
+      }
+    }
+  ],
+  "alignmentVersion": 5,
+  "alignedAt": "2026-09-28T22:44:09.936Z"
+}

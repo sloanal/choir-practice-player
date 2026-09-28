@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>ChoirCapture</string>
+<key>CFBundleIdentifier</key><string>local.choir.capture</string>
+<key>CFBundleName</key><string>ChoirCapture</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>NSAudioCaptureUsageDescription</key><string>Record only this dedicated Dropbox player's choir tracks to local audio files, as requested.</string>
+<key>NSScreenCaptureUsageDescription</key><string>Capture this dedicated player's system audio. No screen video or microphone audio is saved.</string>
+</dict></plist>

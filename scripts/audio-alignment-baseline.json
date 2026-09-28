@@ -1,0 +1,135 @@
+{
+  "version": 3,
+  "songs": {
+    "because-the-night": {
+      "title": "Because the Night",
+      "referencePart": "high",
+      "duration": 21.1,
+      "parts": {
+        "high": { "sourceOffset": 0, "tempo": 1 },
+        "mid": { "sourceOffset": 0.78, "tempo": 0.97 },
+        "low": { "sourceOffset": 0.19, "tempo": 0.974 }
+      }
+    },
+    "blinding-lights": {
+      "title": "Blinding Lights",
+      "referencePart": "low",
+      "duration": 26.72,
+      "parts": {
+        "high": { "sourceOffset": 1.02, "tempo": 1.022 },
+        "mid": { "sourceOffset": 1.87, "tempo": 1.018 },
+        "low": { "sourceOffset": 0, "tempo": 1 }
+      }
+    },
+    "clear-blue-morning": {
+      "title": "Clear Blue Morning",
+      "referencePart": "low",
+      "duration": 65.05,
+      "parts": {
+        "high": { "sourceOffset": 1.27, "tempo": 1.137 },
+        "mid": { "sourceOffset": 1.49, "tempo": 1.006 },
+        "low": { "sourceOffset": 0, "tempo": 1 }
+      }
+    },
+    "closer-to-fine": {
+      "title": "Closer to Fine",
+      "referencePart": "high",
+      "duration": 37.3,
+      "parts": {
+        "high": { "sourceOffset": 0, "tempo": 1 },
+        "mid": { "sourceOffset": 0.08, "tempo": 1.046 },
+        "low": { "sourceOffset": 0.54, "tempo": 1.044 }
+      }
+    },
+    "diamonds": {
+      "title": "Diamonds",
+      "referencePart": "mid",
+      "duration": 47.94,
+      "parts": {
+        "high": { "sourceOffset": -0.37, "tempo": 1.02 },
+        "mid": { "sourceOffset": 0, "tempo": 1 },
+        "low": { "sourceOffset": 0.36, "tempo": 1.004 }
+      }
+    },
+    "fix-you-bridge": {
+      "title": "Fix You (Bridge)",
+      "referencePart": "mid",
+      "duration": 51.88,
+      "parts": {
+        "high": { "sourceOffset": 0.25, "tempo": 1.048 },
+        "mid": { "sourceOffset": 0, "tempo": 1 },
+        "low": { "sourceOffset": -0.04, "tempo": 1.022 }
+      }
+    },
+    "fix-you-chorus": {
+      "title": "Fix You (Chorus)",
+      "referencePart": "high",
+      "duration": 22.54,
+      "parts": {
+        "high": { "sourceOffset": 0, "tempo": 1 },
+        "mid": { "sourceOffset": 1.06, "tempo": 0.984 },
+        "low": { "sourceOffset": 6.71, "tempo": 0.975 }
+      }
+    },
+    "lay-down": {
+      "title": "Lay Down",
+      "referencePart": "mid",
+      "duration": 28.5,
+      "parts": {
+        "high": { "sourceOffset": 12.53, "tempo": 1.024 },
+        "mid": { "sourceOffset": 0, "tempo": 1 },
+        "low": { "sourceOffset": 2.55, "tempo": 1.02 }
+      }
+    },
+    "lay-down-bridge": {
+      "title": "Lay Down (Bridge)",
+      "referencePart": "mid",
+      "duration": 22.52,
+      "parts": {
+        "high": { "sourceOffset": 0.28, "tempo": 0.99 },
+        "mid": { "sourceOffset": 0, "tempo": 1 },
+        "low": { "sourceOffset": 0.25, "tempo": 1.056 }
+      }
+    },
+    "the-chain-chorus": {
+      "title": "The Chain (Chorus)",
+      "referencePart": "low",
+      "duration": 69.4,
+      "parts": {
+        "high": { "sourceOffset": 0, "tempo": 1.005 },
+        "mid": { "sourceOffset": 1.11, "tempo": 1.024 },
+        "low": { "sourceOffset": 0, "tempo": 1 }
+      }
+    },
+    "the-chain-outro": {
+      "title": "The Chain (Outro)",
+      "referencePart": "high",
+      "duration": 26.94,
+      "parts": {
+        "high": { "sourceOffset": 0, "tempo": 1 },
+        "mid": { "sourceOffset": -0.32, "tempo": 1.01 },
+        "low": { "sourceOffset": -1.04, "tempo": 1.023 }
+      }
+    },
+    "the-chain-verses": {
+      "title": "The Chain (Verses)",
+      "referencePart": "low",
+      "duration": 65.45,
+      "parts": {
+        "high": { "sourceOffset": 0.96, "tempo": 0.98 },
+        "mid": { "sourceOffset": 0.48, "tempo": 1 },
+        "low": { "sourceOffset": 0, "tempo": 1 }
+      }
+    },
+    "you-belong-with-me": {
+      "title": "You Belong with Me (Chorus 1)",
+      "referencePart": "high",
+      "duration": 20.4,
+      "parts": {
+        "high": { "sourceOffset": 0, "tempo": 1 },
+        "mid": { "sourceOffset": 1.72, "tempo": 1.022 },
+        "low": { "sourceOffset": 0.46, "tempo": 1.048 }
+      }
+    }
+  }
+}
