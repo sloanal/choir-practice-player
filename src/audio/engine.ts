@@ -20,6 +20,7 @@ export interface TrackInput {
 
 interface Track {
   id: string;
+  bytes: ArrayBuffer;
   buffer: AudioBuffer;
   gain: GainNode;
   peak: number;
@@ -45,6 +46,7 @@ export interface TrackState {
 export class LayeredPlayer {
   private ctx: AudioContext;
   private master: GainNode;
+  private rebuiltContextForMobile = false;
   private masterVolume = 1;
   private tracks: Track[] = [];
 
@@ -87,6 +89,7 @@ export class LayeredPlayer {
         }
         const track: Track = {
           id: input.id,
+          bytes,
           buffer,
           gain,
           peak,
@@ -148,6 +151,9 @@ export class LayeredPlayer {
 
   async play(): Promise<void> {
     if (this.playing) return;
+    if (isIOSLike() && !this.rebuiltContextForMobile) {
+      await this.rebuildContextForMobileGesture();
+    }
     if (this.ctx.state === "suspended") {
       this.primeOutputForMobileSafari();
       void this.ctx.resume();
@@ -290,6 +296,31 @@ export class LayeredPlayer {
     }
   }
 
+  private async rebuildContextForMobileGesture(): Promise<void> {
+    this.rebuiltContextForMobile = true;
+    const oldCtx = this.ctx;
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    this.ctx = new Ctx();
+    this.master = this.ctx.createGain();
+    this.master.connect(this.ctx.destination);
+    this.primeOutputForMobileSafari();
+    void this.ctx.resume();
+
+    this.tracks = await Promise.all(
+      this.tracks.map(async (track) => {
+        const buffer = await this.ctx.decodeAudioData(track.bytes.slice(0));
+        const gain = this.ctx.createGain();
+        gain.connect(this.master);
+        return { ...track, buffer, gain, source: null };
+      })
+    );
+    this.applyGains();
+    void oldCtx.close();
+  }
+
   private startSources(from: number): void {
     const now = this.ctx.currentTime;
     this.startCtxTime = now;
@@ -349,6 +380,15 @@ export class LayeredPlayer {
       }
     }
   }
+}
+
+function isIOSLike(): boolean {
+  const nav = window.navigator;
+  if (!nav) return false;
+  return (
+    /iPad|iPhone|iPod/.test(nav.userAgent) ||
+    (nav.platform === "MacIntel" && nav.maxTouchPoints > 1)
+  );
 }
 
 /**
