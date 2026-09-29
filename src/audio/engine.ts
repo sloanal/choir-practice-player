@@ -148,7 +148,10 @@ export class LayeredPlayer {
 
   async play(): Promise<void> {
     if (this.playing) return;
-    if (this.ctx.state === "suspended") await this.ctx.resume();
+    if (this.ctx.state === "suspended") {
+      this.primeOutputForMobileSafari();
+      void this.ctx.resume();
+    }
     let from = this.pausedPos;
     if (from >= this.duration - 0.02) from = this.loopOn ? this.loopStart : 0;
     this.startSources(from);
@@ -273,6 +276,18 @@ export class LayeredPlayer {
     const pos = this.getPosition();
     this.stopSources();
     this.startSources(pos);
+  }
+
+  private primeOutputForMobileSafari(): void {
+    const buffer = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(this.master);
+    try {
+      src.start(0);
+    } catch {
+      // Older mobile Safari builds can throw if the context was already unlocked.
+    }
   }
 
   private startSources(from: number): void {
