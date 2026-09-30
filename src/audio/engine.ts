@@ -47,6 +47,7 @@ export class LayeredPlayer {
   private ctx: AudioContext;
   private master: GainNode;
   private rebuiltContextForMobile = false;
+  private mediaSessionKeepAlive = new SilentMediaKeepAlive();
   private masterVolume = 1;
   private tracks: Track[] = [];
 
@@ -63,8 +64,8 @@ export class LayeredPlayer {
   onEnded: (() => void) | null = null;
 
   constructor() {
-    const Ctx =
-      window.AudioContext ||
+    requestPlaybackAudioSession();
+    const Ctx = window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     this.ctx = new Ctx();
@@ -76,7 +77,9 @@ export class LayeredPlayer {
     const loaded = await Promise.all(
       inputs.map(async (input) => {
         const res = await fetch(input.url);
-        if (!res.ok) throw new Error(`Failed to load ${input.url}: ${res.status}`);
+        if (!res.ok) {
+          throw new Error(`Failed to load ${input.url}: ${res.status}`);
+        }
         const bytes = await res.arrayBuffer();
         const buffer = await this.ctx.decodeAudioData(bytes);
         const onset = input.onset ?? detectOnset(buffer);
@@ -85,7 +88,9 @@ export class LayeredPlayer {
         let peak = 0;
         for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
           const samples = buffer.getChannelData(channel);
-          for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+          for (let i = 0; i < samples.length; i++) {
+            peak = Math.max(peak, Math.abs(samples[i]));
+          }
         }
         const track: Track = {
           id: input.id,
@@ -101,7 +106,7 @@ export class LayeredPlayer {
           soloed: false,
         };
         return track;
-      })
+      }),
     );
     this.tracks = loaded;
     this.loopEnd = this.duration;
@@ -127,7 +132,8 @@ export class LayeredPlayer {
 
   getPosition(): number {
     if (!this.playing) return this.pausedPos;
-    const raw = this.startPos + (this.ctx.currentTime - this.startCtxTime) * this.rate;
+    const raw = this.startPos +
+      (this.ctx.currentTime - this.startCtxTime) * this.rate;
     if (this.loopOn) {
       const len = this.loopEnd - this.loopStart;
       if (len > 0 && raw >= this.loopEnd) {
@@ -151,6 +157,10 @@ export class LayeredPlayer {
 
   async play(): Promise<void> {
     if (this.playing) return;
+    // Must run synchronously inside the tap, before any await, or iOS refuses
+    // to start the media element that moves us off the ringer-switch channel.
+    requestPlaybackAudioSession();
+    if (isIOSLike()) this.mediaSessionKeepAlive.start();
     if (isIOSLike() && !this.rebuiltContextForMobile) {
       await this.rebuildContextForMobileGesture();
     }
@@ -168,6 +178,7 @@ export class LayeredPlayer {
     this.pausedPos = this.getPosition();
     this.stopSources();
     this.playing = false;
+    this.mediaSessionKeepAlive.stop();
   }
 
   async toggle(): Promise<void> {
@@ -192,7 +203,10 @@ export class LayeredPlayer {
 
   setLoopRegion(start: number, end: number): void {
     this.loopStart = Math.max(0, Math.min(start, this.duration));
-    this.loopEnd = Math.max(this.loopStart + 0.05, Math.min(end, this.duration));
+    this.loopEnd = Math.max(
+      this.loopStart + 0.05,
+      Math.min(end, this.duration),
+    );
     this.restartIfPlaying();
   }
 
@@ -255,6 +269,7 @@ export class LayeredPlayer {
 
   dispose(): void {
     this.stopSources();
+    this.mediaSessionKeepAlive.dispose();
     void this.ctx.close();
   }
 
@@ -274,7 +289,8 @@ export class LayeredPlayer {
     }
     // Aligned piano/vocal attacks can sum above full scale. Reserve headroom
     // without changing timing or compressing the recordings; solo stays full.
-    this.master.gain.value = this.masterVolume * Math.min(1, .95 / Math.max(.95, summedPeaks));
+    this.master.gain.value = this.masterVolume *
+      Math.min(1, .95 / Math.max(.95, summedPeaks));
   }
 
   private restartIfPlaying(): void {
@@ -299,8 +315,7 @@ export class LayeredPlayer {
   private async rebuildContextForMobileGesture(): Promise<void> {
     this.rebuiltContextForMobile = true;
     const oldCtx = this.ctx;
-    const Ctx =
-      window.AudioContext ||
+    const Ctx = window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext;
     this.ctx = new Ctx();
@@ -315,7 +330,7 @@ export class LayeredPlayer {
         const gain = this.ctx.createGain();
         gain.connect(this.master);
         return { ...track, buffer, gain, source: null };
-      })
+      }),
     );
     this.applyGains();
     void oldCtx.close();
@@ -363,6 +378,7 @@ export class LayeredPlayer {
     this.playing = false;
     this.pausedPos = this.duration;
     this.stopSources();
+    this.mediaSessionKeepAlive.stop();
     this.onEnded?.();
   }
 
@@ -380,6 +396,96 @@ export class LayeredPlayer {
       }
     }
   }
+}
+
+/**
+ * iOS routes Web Audio through the "ambient" audio session, which obeys the
+ * ring/silent switch; <audio>/<video> use "playback", which does not. Safari
+ * 17+ lets pages opt Web Audio into "playback" directly.
+ */
+function requestPlaybackAudioSession(): void {
+  const session = (
+    window.navigator as { audioSession?: { type: string } } | undefined
+  )?.audioSession;
+  if (!session || session.type === "playback") return;
+  try {
+    session.type = "playback";
+  } catch {
+    // Unsupported session type on this build; the keep-alive fallback covers it.
+  }
+}
+
+/**
+ * Older iOS versions have no audioSession API. There, keeping an
+ * HTMLMediaElement playing promotes the whole page to the "playback" session,
+ * so Web Audio output also ignores the silent switch while it runs.
+ */
+class SilentMediaKeepAlive {
+  private el: HTMLAudioElement | null = null;
+  private url: string | null = null;
+
+  start(): void {
+    const doc = window.document;
+    if (!doc) return;
+    if (!this.el) {
+      this.url = URL.createObjectURL(silentWav());
+      const el = doc.createElement("audio");
+      el.src = this.url;
+      el.loop = true;
+      el.preload = "auto";
+      el.setAttribute("playsinline", "");
+      el.setAttribute("x-webkit-airplay", "deny");
+      el.disableRemotePlayback = true;
+      this.el = el;
+    }
+    const played = this.el.play();
+    played?.catch(() => {
+      // Autoplay rejected outside a gesture; the next tap retries.
+    });
+  }
+
+  stop(): void {
+    this.el?.pause();
+  }
+
+  dispose(): void {
+    if (this.el) {
+      this.el.pause();
+      this.el.removeAttribute("src");
+      this.el.load();
+      this.el = null;
+    }
+    if (this.url) {
+      URL.revokeObjectURL(this.url);
+      this.url = null;
+    }
+  }
+}
+
+function silentWav(): Blob {
+  const sampleRate = 44100;
+  const samples = Math.floor(sampleRate * 0.5);
+  const dataBytes = samples * 2;
+  const view = new DataView(new ArrayBuffer(44 + dataBytes));
+  const ascii = (offset: number, s: string) => {
+    for (let i = 0; i < s.length; i++) {
+      view.setUint8(offset + i, s.charCodeAt(i));
+    }
+  };
+  ascii(0, "RIFF");
+  view.setUint32(4, 36 + dataBytes, true);
+  ascii(8, "WAVE");
+  ascii(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  ascii(36, "data");
+  view.setUint32(40, dataBytes, true);
+  return new Blob([view.buffer], { type: "audio/wav" });
 }
 
 function isIOSLike(): boolean {
