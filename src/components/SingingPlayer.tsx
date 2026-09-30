@@ -31,6 +31,11 @@ export function SingingPlayer(
     : 0;
 
   const anySolo = player.tracks.some((t) => t.soloed);
+  const anyMuted = player.tracks.some((t) => t.muted);
+  const allParts = !anySolo && !anyMuted;
+  const otherPartsOnly = !anySolo &&
+    player.tracks.length > 1 &&
+    player.tracks.every((t) => t.muted === (t.id === myPart));
 
   return (
     <div className="playerpage">
@@ -100,9 +105,9 @@ export function SingingPlayer(
 
           <div className="quick-actions">
             <button
-              className={`chip ${!anySolo ? "chip-on" : ""}`}
-              onClick={player.clearSolo}
-              aria-pressed={!anySolo}
+              className={`chip ${allParts ? "chip-on" : ""}`}
+              onClick={player.playAll}
+              aria-pressed={allParts}
             >
               All parts
             </button>
@@ -118,6 +123,15 @@ export function SingingPlayer(
                   !!player.tracks.find((t) => t.id === myPart)?.soloed}
               >
                 Just my part ({PART_SHORT[myPart]})
+              </button>
+            )}
+            {parts.includes(myPart) && parts.length > 1 && (
+              <button
+                className={`chip ${otherPartsOnly ? "chip-on" : ""}`}
+                onClick={() => player.muteOnly(myPart)}
+                aria-pressed={otherPartsOnly}
+              >
+                Just the other parts
               </button>
             )}
           </div>

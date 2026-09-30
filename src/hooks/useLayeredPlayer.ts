@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { LayeredPlayer, type TrackInput, type TrackState } from "../audio/engine";
+import {
+  LayeredPlayer,
+  type TrackInput,
+  type TrackState,
+} from "../audio/engine";
 
 interface LoopState {
   on: boolean;
@@ -23,6 +27,8 @@ export interface LayeredController {
   toggleSolo: (id: string) => void;
   clearSolo: () => void;
   soloOnly: (id: string) => void;
+  muteOnly: (id: string) => void;
+  playAll: () => void;
   setRate: (r: number) => void;
   setLoopEnabled: (on: boolean) => void;
   setLoopRegion: (start: number, end: number) => void;
@@ -31,7 +37,9 @@ export interface LayeredController {
 
 export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
   const engineRef = useRef<LayeredPlayer | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   const [error, setError] = useState<string>();
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -106,28 +114,28 @@ export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
       engineRef.current?.setVolume(id, v);
       refreshTracks();
     },
-    [refreshTracks]
+    [refreshTracks],
   );
   const setMuted = useCallback(
     (id: string, m: boolean) => {
       engineRef.current?.setMuted(id, m);
       refreshTracks();
     },
-    [refreshTracks]
+    [refreshTracks],
   );
   const toggleSolo = useCallback(
     (id: string) => {
       engineRef.current?.toggleSolo(id);
       refreshTracks();
     },
-    [refreshTracks]
+    [refreshTracks],
   );
   const clearSolo = useCallback(
     () => {
       engineRef.current?.clearSolo();
       refreshTracks();
     },
-    [refreshTracks]
+    [refreshTracks],
   );
   const soloOnly = useCallback(
     (id: string) => {
@@ -138,7 +146,29 @@ export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
       if (!already) engine.toggleSolo(id);
       refreshTracks();
     },
-    [refreshTracks]
+    [refreshTracks],
+  );
+  const muteOnly = useCallback(
+    (id: string) => {
+      const engine = engineRef.current;
+      if (!engine) return;
+      engine.clearSolo();
+      for (const t of engine.getTrackStates()) {
+        engine.setMuted(t.id, t.id === id);
+      }
+      refreshTracks();
+    },
+    [refreshTracks],
+  );
+  const playAll = useCallback(
+    () => {
+      const engine = engineRef.current;
+      if (!engine) return;
+      engine.clearSolo();
+      for (const t of engine.getTrackStates()) engine.setMuted(t.id, false);
+      refreshTracks();
+    },
+    [refreshTracks],
   );
   const setRate = useCallback((r: number) => {
     engineRef.current?.setPlaybackRate(r);
@@ -159,7 +189,7 @@ export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
       engineRef.current?.setOnsetDelta(id, delta);
       refreshTracks();
     },
-    [refreshTracks]
+    [refreshTracks],
   );
 
   return {
@@ -178,6 +208,8 @@ export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
     toggleSolo,
     clearSolo,
     soloOnly,
+    muteOnly,
+    playAll,
     setRate,
     setLoopEnabled,
     setLoopRegion,
