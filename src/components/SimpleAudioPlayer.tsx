@@ -52,7 +52,11 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
       />
 
       <div className="transport">
-        <button className="play-btn" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
+        <button
+          className="play-btn"
+          onClick={toggle}
+          aria-label={playing ? "Pause" : "Play"}
+        >
           {playing ? "❚❚" : "►"}
         </button>
         <button
