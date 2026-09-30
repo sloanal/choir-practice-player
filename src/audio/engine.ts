@@ -61,6 +61,8 @@ export class LayeredPlayer {
   private loopStart = 0;
   private loopEnd = 0;
 
+  private loadToken = 0;
+
   onEnded: (() => void) | null = null;
 
   constructor() {
@@ -73,18 +75,31 @@ export class LayeredPlayer {
     this.master.connect(this.ctx.destination);
   }
 
-  async load(inputs: TrackInput[]): Promise<void> {
+  /**
+   * Load a set of tracks, replacing any previously loaded ones. Can be called
+   * repeatedly to reuse one AudioContext across songs. Resolves `false` when a
+   * newer `load()` call superseded this one.
+   */
+  async load(
+    inputs: TrackInput[],
+    fetchBytes: (url: string) => Promise<ArrayBuffer> = fetchArrayBuffer
+  ): Promise<boolean> {
+    const token = ++this.loadToken;
+    this.stopSources();
+    this.playing = false;
+    this.pausedPos = 0;
+    this.loopOn = false;
+    this.loopStart = 0;
+    for (const t of this.tracks) t.gain.disconnect();
+    this.tracks = [];
+
+    const ctx = this.ctx;
     const loaded = await Promise.all(
       inputs.map(async (input) => {
-        const res = await fetch(input.url);
-        if (!res.ok) {
-          throw new Error(`Failed to load ${input.url}: ${res.status}`);
-        }
-        const bytes = await res.arrayBuffer();
-        const buffer = await this.ctx.decodeAudioData(bytes);
+        const bytes = await fetchBytes(input.url);
+        const buffer = await ctx.decodeAudioData(bytes);
         const onset = input.onset ?? detectOnset(buffer);
-        const gain = this.ctx.createGain();
-        gain.connect(this.master);
+        const gain = ctx.createGain();
         let peak = 0;
         for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
           const samples = buffer.getChannelData(channel);
@@ -108,9 +123,12 @@ export class LayeredPlayer {
         return track;
       }),
     );
+    if (token !== this.loadToken || ctx !== this.ctx) return false;
+    for (const t of loaded) t.gain.connect(this.master);
     this.tracks = loaded;
     this.loopEnd = this.duration;
     this.applyGains();
+    return true;
   }
 
   /** Length of the shared, onset-aligned timeline. */
@@ -155,10 +173,14 @@ export class LayeredPlayer {
     }));
   }
 
-  async play(): Promise<void> {
-    if (this.playing) return;
-    // Must run synchronously inside the tap, before any await, or iOS refuses
-    // to start the media element that moves us off the ringer-switch channel.
+  /**
+   * Unlock audio output. Must be started synchronously inside a user gesture
+   * on mobile Safari; `play()` does this itself, but callers that load audio
+   * after the gesture should call it first.
+   */
+  async unlock(): Promise<void> {
+    // Must run before any await, or iOS refuses to start the media element
+    // that moves us off the ringer-switch channel.
     requestPlaybackAudioSession();
     if (isIOSLike()) this.mediaSessionKeepAlive.start();
     if (isIOSLike() && !this.rebuiltContextForMobile) {
@@ -168,6 +190,12 @@ export class LayeredPlayer {
       this.primeOutputForMobileSafari();
       void this.ctx.resume();
     }
+  }
+
+  async play(): Promise<void> {
+    if (this.playing) return;
+    await this.unlock();
+    if (this.playing || this.tracks.length === 0) return;
     let from = this.pausedPos;
     if (from >= this.duration - 0.02) from = this.loopOn ? this.loopStart : 0;
     this.startSources(from);
@@ -486,6 +514,12 @@ function silentWav(): Blob {
   ascii(36, "data");
   view.setUint32(40, dataBytes, true);
   return new Blob([view.buffer], { type: "audio/wav" });
+}
+
+async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+  return res.arrayBuffer();
 }
 
 function isIOSLike(): boolean {

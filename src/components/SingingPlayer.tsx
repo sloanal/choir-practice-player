@@ -1,44 +1,48 @@
 import { useMemo, useState } from "react";
 import { PART_LABELS, PART_SHORT, type PartId, type Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
-import { partsOf, resolveUrl } from "../lib/songs";
+import { partsOf, singingInputs } from "../lib/songs";
 import { useLayeredPlayer } from "../hooks/useLayeredPlayer";
 import { formatTime } from "../lib/format";
 
 const RATES = [0.75, 0.9, 1, 1.1, 1.25];
 
-export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) {
+export function SingingPlayer(
+  { song, myPart }: { song: Song; myPart: PartId },
+) {
   const parts = partsOf(song.singing);
   const inputs = useMemo(
-    () =>
-      parts.map((p) => {
-        const file = song.singing[p]!;
-        return {
-          id: p,
-          url: resolveUrl(file.path),
-          // Prepared tracks already share an exact zero point. Running onset
-          // detection again would undo that alignment when one part rests.
-          onset: file.alignment ? 0 : undefined,
-        };
-      }),
+    () => singingInputs(song),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [song.id]
+    [song.id],
   );
 
   const player = useLayeredPlayer(inputs);
   const [showAlign, setShowAlign] = useState(false);
 
-  const pct = player.duration > 0 ? (player.position / player.duration) * 100 : 0;
-  const loopStartPct =
-    player.duration > 0 ? (player.loop.start / player.duration) * 100 : 0;
-  const loopEndPct =
-    player.duration > 0 ? (player.loop.end / player.duration) * 100 : 0;
+  const pct = player.duration > 0
+    ? (player.position / player.duration) * 100
+    : 0;
+  const loopStartPct = player.duration > 0
+    ? (player.loop.start / player.duration) * 100
+    : 0;
+  const loopEndPct = player.duration > 0
+    ? (player.loop.end / player.duration) * 100
+    : 0;
 
   const anySolo = player.tracks.some((t) => t.soloed);
+  const anyMuted = player.tracks.some((t) => t.muted);
+  const allParts = !anySolo && !anyMuted;
+  const otherPartsOnly = !anySolo &&
+    player.tracks.length > 1 &&
+    player.tracks.every((t) => t.muted === (t.id === myPart));
 
   return (
     <div className="playerpage">
-      <button className="back" onClick={() => navigate({ name: "song", id: song.id })}>
+      <button
+        className="back"
+        onClick={() => navigate({ name: "song", id: song.id })}
+      >
         ← {song.title}
       </button>
       <div className="playerpage-head">
@@ -46,7 +50,9 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
         <span className="mode-tag mode-sing">🎧 Singing</span>
       </div>
 
-      {player.status === "loading" && <p className="muted">Loading & aligning parts…</p>}
+      {player.status === "loading" && (
+        <p className="muted">Loading & aligning parts…</p>
+      )}
       {player.status === "error" && (
         <p className="muted">Couldn’t load audio: {player.error}</p>
       )}
@@ -60,6 +66,14 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
               aria-label={player.playing ? "Pause" : "Play"}
             >
               {player.playing ? "❚❚" : "►"}
+            </button>
+            <button
+              className="restart-btn"
+              onClick={() => player.seek(0)}
+              aria-label="Restart from beginning"
+              title="Restart from beginning"
+            >
+              ⏮
             </button>
             <div className="scrub">
               <div className="scrub-track">
@@ -91,9 +105,9 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
 
           <div className="quick-actions">
             <button
-              className={`chip ${!anySolo ? "chip-on" : ""}`}
-              onClick={player.clearSolo}
-              aria-pressed={!anySolo}
+              className={`chip ${allParts ? "chip-on" : ""}`}
+              onClick={player.playAll}
+              aria-pressed={allParts}
             >
               All parts
             </button>
@@ -105,11 +119,19 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
                     : ""
                 }`}
                 onClick={() => player.soloOnly(myPart)}
-                aria-pressed={
-                  anySolo && !!player.tracks.find((t) => t.id === myPart)?.soloed
-                }
+                aria-pressed={anySolo &&
+                  !!player.tracks.find((t) => t.id === myPart)?.soloed}
               >
                 Just my part ({PART_SHORT[myPart]})
+              </button>
+            )}
+            {parts.includes(myPart) && parts.length > 1 && (
+              <button
+                className={`chip ${otherPartsOnly ? "chip-on" : ""}`}
+                onClick={() => player.muteOnly(myPart)}
+                aria-pressed={otherPartsOnly}
+              >
+                Just the other parts
               </button>
             )}
           </div>
@@ -123,12 +145,15 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
                   <div className="track-head">
                     <span className="track-name">
                       {PART_LABELS[p]}
-                      {p === myPart && <span className="you-dot" title="Your part" />}
+                      {p === myPart && (
+                        <span className="you-dot" title="Your part" />
+                      )}
                     </span>
                     <div className="track-btns">
                       <button
                         className={`mini ${t.soloed ? "mini-solo" : ""}`}
-                        onClick={() => player.toggleSolo(p)}
+                        onClick={() =>
+                          player.toggleSolo(p)}
                         title="Solo"
                         aria-pressed={t.soloed}
                       >
@@ -136,7 +161,8 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
                       </button>
                       <button
                         className={`mini ${t.muted ? "mini-mute" : ""}`}
-                        onClick={() => player.setMuted(p, !t.muted)}
+                        onClick={() =>
+                          player.setMuted(p, !t.muted)}
                         title="Mute"
                         aria-pressed={t.muted}
                       >
@@ -151,18 +177,27 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
                     max={1}
                     step={0.01}
                     value={t.volume}
-                    onChange={(e) => player.setVolume(p, Number(e.target.value))}
+                    onChange={(e) =>
+                      player.setVolume(p, Number(e.target.value))}
                   />
                   {showAlign && (
                     <div className="align-row">
                       <span className="muted">nudge</span>
-                      <button className="mini" onClick={() => nudge(player, p, t.onset, t.detectedOnset, -0.02)}>
+                      <button
+                        className="mini"
+                        onClick={() =>
+                          nudge(player, p, t.onset, t.detectedOnset, -0.02)}
+                      >
                         −
                       </button>
                       <span className="align-val">
                         {Math.round((t.onset - t.detectedOnset) * 1000)}ms
                       </span>
-                      <button className="mini" onClick={() => nudge(player, p, t.onset, t.detectedOnset, +0.02)}>
+                      <button
+                        className="mini"
+                        onClick={() =>
+                          nudge(player, p, t.onset, t.detectedOnset, +0.02)}
+                      >
                         +
                       </button>
                     </div>
@@ -183,15 +218,15 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
             <button
               className="chip"
               onClick={() =>
-                player.setLoopRegion(player.position, player.loop.end)
-              }
+                player.setLoopRegion(player.position, player.loop.end)}
               title="Set loop start to current position"
             >
               Set A
             </button>
             <button
               className="chip"
-              onClick={() => player.setLoopRegion(player.loop.start, player.position)}
+              onClick={() =>
+                player.setLoopRegion(player.loop.start, player.position)}
               title="Set loop end to current position"
             >
               Set B
@@ -233,7 +268,7 @@ function nudge(
   part: PartId,
   onset: number,
   detected: number,
-  delta: number
+  delta: number,
 ) {
   const currentDelta = onset - detected;
   player.setOnsetDelta(part, currentDelta + delta);
