@@ -30,6 +30,13 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
     else el.pause();
   };
 
+  const restart = () => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.currentTime = 0;
+    setPosition(0);
+  };
+
   return (
     <div className="player">
       <audio
@@ -47,6 +54,14 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
       <div className="transport">
         <button className="play-btn" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
           {playing ? "❚❚" : "►"}
+        </button>
+        <button
+          className="restart-btn"
+          onClick={restart}
+          aria-label="Restart from beginning"
+          title="Restart from beginning"
+        >
+          ⏮
         </button>
         <div className="scrub">
           <input

@@ -376,6 +376,24 @@ code {
   transform: scale(0.96);
 }
 
+.restart-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.restart-btn:active {
+  transform: scale(0.96);
+}
+
 .scrub {
   flex: 1;
 }

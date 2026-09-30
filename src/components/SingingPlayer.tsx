@@ -61,6 +61,14 @@ export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) 
             >
               {player.playing ? "❚❚" : "►"}
             </button>
+            <button
+              className="restart-btn"
+              onClick={() => player.seek(0)}
+              aria-label="Restart from beginning"
+              title="Restart from beginning"
+            >
+              ⏮
+            </button>
             <div className="scrub">
               <div className="scrub-track">
                 {player.loop.on && (
