@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { PART_LABELS, PART_SHORT, type PartId, type Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
-import { partsOf, resolveUrl } from "../lib/songs";
+import { partsOf, singingInputs } from "../lib/songs";
 import { useLayeredPlayer } from "../hooks/useLayeredPlayer";
 import { formatTime } from "../lib/format";
 
@@ -10,17 +10,7 @@ const RATES = [0.75, 0.9, 1, 1.1, 1.25];
 export function SingingPlayer({ song, myPart }: { song: Song; myPart: PartId }) {
   const parts = partsOf(song.singing);
   const inputs = useMemo(
-    () =>
-      parts.map((p) => {
-        const file = song.singing[p]!;
-        return {
-          id: p,
-          url: resolveUrl(file.path),
-          // Prepared tracks already share an exact zero point. Running onset
-          // detection again would undo that alignment when one part rests.
-          onset: file.alignment ? 0 : undefined,
-        };
-      }),
+    () => singingInputs(song),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [song.id]
   );

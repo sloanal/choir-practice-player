@@ -1,10 +1,16 @@
 import { useMemo, useState } from "react";
-import type { Song } from "../types";
+import type { PartId, Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
 import { hasSinging, hasTraining, partsOf } from "../lib/songs";
+import { PlaylistPlayer } from "./PlaylistPlayer";
 
-export function SongList({ songs }: { songs: Song[] }) {
+export function SongList({ songs, myPart }: { songs: Song[]; myPart: PartId }) {
   const [query, setQuery] = useState("");
+
+  const singingSongs = useMemo(
+    () => songs.filter(hasSinging).sort((a, b) => a.title.localeCompare(b.title)),
+    [songs]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -16,6 +22,7 @@ export function SongList({ songs }: { songs: Song[] }) {
 
   return (
     <div className="songlist">
+      <PlaylistPlayer songs={singingSongs} myPart={myPart} />
       <div className="search">
         <input
           type="search"

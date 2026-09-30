@@ -61,7 +61,7 @@ export function App() {
           (() => {
             const songs = state.manifest.songs;
             if (route.name === "home") {
-              return <SongList songs={songs} />;
+              return <SongList songs={songs} myPart={myPart} />;
             }
             const song = findSong(songs, route.id);
             if (!song) {
