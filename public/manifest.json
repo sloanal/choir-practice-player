@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T22:00:02.359Z",
+  "generatedAt": "2026-10-03T15:21:45.249Z",
   "source": "verified local Dropbox playback-stream exports",
   "songs": [
     {
@@ -89,7 +89,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/Because the night – LEARN - Mids.m4a",
           "path": "audio/because-the-night/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "because-the-night-bridge-and-structure",
+          "title": "Bridge and structure",
+          "all": {
+            "name": "Because the night B&B - bridge and structure.m4a",
+            "size": 2262509,
+            "contentHash": "ceb8ce874d35fd2e3137325a5bae732146f4269449292b8255d12019fbc4bbf4",
+            "modified": "2026-09-29T23:57:28.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/Because the night B&B - bridge and structure.m4a",
+            "path": "audio/bits-and-bobs/because-the-night-bridge-and-structure.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "blinding-lights",
@@ -356,7 +370,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/Closer to Fine - LEARN - MIDS.m4a",
           "path": "audio/closer-to-fine/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "closer-to-fine-ending-and-structure",
+          "title": "Ending & structure",
+          "all": {
+            "name": "Closer to Fine B&B - ending & structure.m4a",
+            "size": 4489467,
+            "contentHash": "ac2654f0180a2119072fc6be36ec5bf44dc0e99e650501b9f93acc172c11c598",
+            "modified": "2026-09-29T23:57:28.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/Closer to Fine B&B - ending & structure.m4a",
+            "path": "audio/bits-and-bobs/closer-to-fine-ending-and-structure.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "diamonds",
@@ -445,7 +473,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/Diamonds – LEARN - Mids.m4a",
           "path": "audio/diamonds/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "diamonds-structure-ending",
+          "title": "Structure + ending",
+          "all": {
+            "name": "Diamonds B&B + structure + ending.m4a",
+            "size": 4797014,
+            "contentHash": "876a8c9db0a9a466506f66ce9f400caa90a1f32fb5e5cffd369ce7c6a32c91ee",
+            "modified": "2026-09-30T00:58:34.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/Diamonds B&B + structure + ending.m4a",
+            "path": "audio/bits-and-bobs/diamonds-structure-ending.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "fix-you-bridge",
@@ -534,7 +576,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/Fix You (Bridge) LEARN - Mids.m4a",
           "path": "audio/fix-you-bridge/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "fix-you-structure",
+          "title": "Structure",
+          "all": {
+            "name": "Fix You - Structure.m4a",
+            "size": 1949544,
+            "contentHash": "82ed9ba5eba2276109a9847df4352565f19a5a22c0f3b18eaeb0955f0cfc912c",
+            "modified": "2026-09-30T19:02:29.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/Fix You - Structure.m4a",
+            "path": "audio/bits-and-bobs/fix-you-structure.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "fix-you-chorus",
@@ -623,7 +679,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/Fix You (CHORUS) LEARN - Mids.m4a",
           "path": "audio/fix-you-chorus/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "fix-you-structure",
+          "title": "Structure",
+          "all": {
+            "name": "Fix You - Structure.m4a",
+            "size": 1949544,
+            "contentHash": "82ed9ba5eba2276109a9847df4352565f19a5a22c0f3b18eaeb0955f0cfc912c",
+            "modified": "2026-09-30T19:02:29.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/Fix You - Structure.m4a",
+            "path": "audio/bits-and-bobs/fix-you-structure.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "lay-down",
@@ -890,7 +960,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/The chain (CHORUS) - LEARN - Mids.m4a",
           "path": "audio/the-chain-chorus/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "the-chain-structure",
+          "title": "Structure",
+          "all": {
+            "name": "The Chain B&B - structure.m4a",
+            "size": 4056610,
+            "contentHash": "e6bdaeea3503027f46d504aa3b29b93934af1579fbf1f3dbcad5e6e22b92eb4d",
+            "modified": "2026-09-29T23:57:27.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/The Chain B&B - structure.m4a",
+            "path": "audio/bits-and-bobs/the-chain-structure.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "the-chain-outro",
@@ -979,7 +1063,21 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/The chain (outro) - LEARN - MIDS.m4a",
           "path": "audio/the-chain-outro/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "the-chain-structure",
+          "title": "Structure",
+          "all": {
+            "name": "The Chain B&B - structure.m4a",
+            "size": 4056610,
+            "contentHash": "e6bdaeea3503027f46d504aa3b29b93934af1579fbf1f3dbcad5e6e22b92eb4d",
+            "modified": "2026-09-29T23:57:27.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/The Chain B&B - structure.m4a",
+            "path": "audio/bits-and-bobs/the-chain-structure.m4a"
+          }
+        }
+      ]
     },
     {
       "id": "the-chain-verses",
@@ -1068,7 +1166,142 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/The Chain (Verses) - LEARN - Mids.m4a",
           "path": "audio/the-chain-verses/training-mid.m4a"
         }
-      }
+      },
+      "extras": [
+        {
+          "id": "the-chain-structure",
+          "title": "Structure",
+          "all": {
+            "name": "The Chain B&B - structure.m4a",
+            "size": 4056610,
+            "contentHash": "e6bdaeea3503027f46d504aa3b29b93934af1579fbf1f3dbcad5e6e22b92eb4d",
+            "modified": "2026-09-29T23:57:27.000Z",
+            "sourcePath": "/Bits&Bobs & Structure/The Chain B&B - structure.m4a",
+            "path": "audio/bits-and-bobs/the-chain-structure.m4a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "you-belong-with-me-bridge-to-end",
+      "title": "You Belong with Me (Bridge to End)",
+      "singing": {
+        "high": {
+          "name": "You belong, Bridge to End - Highers.m4a",
+          "size": 1127907,
+          "contentHash": "9956fe1e0161a55e5bf4a6609adfbcc7f56fac5f7c467c4ad25cfe87fc69c69b",
+          "modified": "2026-10-03T00:33:27.000Z",
+          "sourcePath": "/Highers/Singing Only/You belong, Bridge to End - Highers.m4a",
+          "path": "audio/you-belong-with-me-bridge-to-end/singing-high-aligned-v5-2e28dc03264b.m4a",
+          "rawPath": "audio/you-belong-with-me-bridge-to-end/singing-high.m4a",
+          "sourceSize": 1115391,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "2e28dc03264b7d9ecdebb76cb35860db74de71926269f5a103c160c794e5e3af",
+            "method": "musical-section-keyframes",
+            "duration": 47.3,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 2
+          }
+        },
+        "low": {
+          "name": "You belong Bridge to End - Lowers.m4a",
+          "size": 1124656,
+          "contentHash": "6683f195cd0fc06e903a20d5a74d7730a7f2521dc3abfe80de20cfc2505fe0db",
+          "modified": "2026-10-03T00:33:29.000Z",
+          "sourcePath": "/Lowers/Singing Only/You belong Bridge to End - Lowers.m4a",
+          "path": "audio/you-belong-with-me-bridge-to-end/singing-low-aligned-v5-5ab3827408e8.m4a",
+          "rawPath": "audio/you-belong-with-me-bridge-to-end/singing-low.m4a",
+          "sourceSize": 1128550,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "5ab3827408e880899d681d3dde6d6c0ed4f1617c7ab858de8d6dc37877835b19",
+            "method": "musical-section-keyframes",
+            "duration": 47.3,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 187
+          }
+        },
+        "mid": {
+          "name": "You belong Bridge to End - Mids.m4a",
+          "size": 1126237,
+          "contentHash": "de0c3ef232273040e4f74eefbd7e9a823480d49b5cc2a10ba9c21436706c80bf",
+          "modified": "2026-10-03T00:33:29.000Z",
+          "sourcePath": "/Mids/Singing only/You belong Bridge to End - Mids.m4a",
+          "path": "audio/you-belong-with-me-bridge-to-end/singing-mid-aligned-v5-6b91ee5ccb5d.m4a",
+          "rawPath": "audio/you-belong-with-me-bridge-to-end/singing-mid.m4a",
+          "sourceSize": 1112220,
+          "alignment": {
+            "version": 5,
+            "fingerprint": "6b91ee5ccb5d9ebf32ec2e851e7cfa94ac4a7bc34c4bfac4c5cf2b81ca0a1cb6",
+            "method": "musical-section-keyframes",
+            "duration": 47.3,
+            "referencePart": "high",
+            "sections": 1,
+            "anchors": 187
+          }
+        }
+      },
+      "training": {
+        "high": {
+          "name": "You belong B&B - Highers.m4a",
+          "size": 6216111,
+          "contentHash": "0003c7e9831ea58180e32e3e00355bb5db964cd04718aa143af9b345e25cc9b8",
+          "modified": "2026-10-03T00:33:26.000Z",
+          "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Highers.m4a",
+          "path": "audio/bits-and-bobs/you-belong-high.m4a"
+        },
+        "low": {
+          "name": "You belong B&B - Lowers.m4a",
+          "size": 7472900,
+          "contentHash": "1bdc71ba1a2fd596de669bbeec00b6bce479015b754a06656a56dc5af0b6d7ff",
+          "modified": "2026-10-03T00:33:28.000Z",
+          "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Lowers.m4a",
+          "path": "audio/bits-and-bobs/you-belong-low.m4a"
+        },
+        "mid": {
+          "name": "You belong B&B - Mids.m4a",
+          "size": 7258023,
+          "contentHash": "f1fb883e84b699e2de03ce9e147b2e90607eae4f0d834edbfef394b35b8f561e",
+          "modified": "2026-10-03T00:33:32.000Z",
+          "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Mids.m4a",
+          "path": "audio/bits-and-bobs/you-belong-mid.m4a"
+        }
+      },
+      "extras": [
+        {
+          "id": "you-belong",
+          "title": "Bits & Bobs",
+          "parts": {
+            "high": {
+              "name": "You belong B&B - Highers.m4a",
+              "size": 6216111,
+              "contentHash": "0003c7e9831ea58180e32e3e00355bb5db964cd04718aa143af9b345e25cc9b8",
+              "modified": "2026-10-03T00:33:26.000Z",
+              "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Highers.m4a",
+              "path": "audio/bits-and-bobs/you-belong-high.m4a"
+            },
+            "low": {
+              "name": "You belong B&B - Lowers.m4a",
+              "size": 7472900,
+              "contentHash": "1bdc71ba1a2fd596de669bbeec00b6bce479015b754a06656a56dc5af0b6d7ff",
+              "modified": "2026-10-03T00:33:28.000Z",
+              "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Lowers.m4a",
+              "path": "audio/bits-and-bobs/you-belong-low.m4a"
+            },
+            "mid": {
+              "name": "You belong B&B - Mids.m4a",
+              "size": 7258023,
+              "contentHash": "f1fb883e84b699e2de03ce9e147b2e90607eae4f0d834edbfef394b35b8f561e",
+              "modified": "2026-10-03T00:33:32.000Z",
+              "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Mids.m4a",
+              "path": "audio/bits-and-bobs/you-belong-mid.m4a"
+            }
+          }
+        }
+      ]
     },
     {
       "id": "you-belong-with-me",
@@ -1157,9 +1390,55 @@
           "sourcePath": "/Mids/LEARN - Greg teaching/You belong with me - LEARN - Mids.m4a",
           "path": "audio/you-belong-with-me/training-mid.m4a"
         }
+      },
+      "extras": [
+        {
+          "id": "you-belong",
+          "title": "Bits & Bobs",
+          "parts": {
+            "high": {
+              "name": "You belong B&B - Highers.m4a",
+              "size": 6216111,
+              "contentHash": "0003c7e9831ea58180e32e3e00355bb5db964cd04718aa143af9b345e25cc9b8",
+              "modified": "2026-10-03T00:33:26.000Z",
+              "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Highers.m4a",
+              "path": "audio/bits-and-bobs/you-belong-high.m4a"
+            },
+            "low": {
+              "name": "You belong B&B - Lowers.m4a",
+              "size": 7472900,
+              "contentHash": "1bdc71ba1a2fd596de669bbeec00b6bce479015b754a06656a56dc5af0b6d7ff",
+              "modified": "2026-10-03T00:33:28.000Z",
+              "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Lowers.m4a",
+              "path": "audio/bits-and-bobs/you-belong-low.m4a"
+            },
+            "mid": {
+              "name": "You belong B&B - Mids.m4a",
+              "size": 7258023,
+              "contentHash": "f1fb883e84b699e2de03ce9e147b2e90607eae4f0d834edbfef394b35b8f561e",
+              "modified": "2026-10-03T00:33:32.000Z",
+              "sourcePath": "/Bits&Bobs & Structure/You belong B&B - Mids.m4a",
+              "path": "audio/bits-and-bobs/you-belong-mid.m4a"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "extras": [
+    {
+      "id": "bits-and-bobs-explanation",
+      "title": "Bits & Bobs explanation",
+      "all": {
+        "name": "Bits & Bobs explanation!.m4a",
+        "size": 1061755,
+        "contentHash": "279128c05c0c1f0de48ffab4d78386a40cc6b6d5fd82913f21b1193e1077e04e",
+        "modified": "2026-02-24T02:17:39.000Z",
+        "sourcePath": "/Bits&Bobs & Structure/Bits & Bobs explanation!.m4a",
+        "path": "audio/bits-and-bobs/bits-and-bobs-explanation.m4a"
       }
     }
   ],
   "alignmentVersion": 5,
-  "alignedAt": "2026-09-28T22:44:09.936Z"
+  "alignedAt": "2026-10-03T15:24:15.734Z"
 }

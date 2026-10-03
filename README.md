@@ -104,7 +104,8 @@ Current elastic-alignment edits:
 - Uses continuous elastic stretching within each musical section, short edge
   fades, common gaps, and calibration of the stretcher's measured timing offset.
 
-`verify:audio` checks all 78 files, map fingerprints and trio durations. The
+`verify:audio` checks every song and Bits & Bobs file, map fingerprints and
+trio durations. The
 offline timing audit separately compares decoded AAC envelopes with their own
 source maps and reports confident cross-voice attack matches. Those partial
 matches are diagnostics, **not proof every harmony note is simultaneous**;
@@ -166,6 +167,12 @@ alignment pipeline before committing the changed `public/audio` files and
 and training versions don't group together, add an entry to
 `scripts/song-aliases.json` mapping the odd normalized title to the canonical
 one.
+
+Recordings in the **Bits&Bobs & Structure** folder become each song's "Bits &
+Bobs" page. A file is attached to every song section whose title starts with
+the name before `B&B` or ` - ` (so "The Chain B&B - structure" appears on all
+three Chain sections); files matching no song are shown on the overview page.
+Per-part recordings also serve as training for a song that has none.
 
 ## Project layout
 

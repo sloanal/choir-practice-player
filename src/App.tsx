@@ -10,6 +10,7 @@ import { SongList } from "./components/SongList";
 import { SongChooser } from "./components/SongChooser";
 import { TrainingPlayer } from "./components/TrainingPlayer";
 import { SingingPlayer } from "./components/SingingPlayer";
+import { BitsAndBobsHome, SongExtras } from "./components/BitsAndBobs";
 
 export function App() {
   const state = useManifest();
@@ -75,6 +76,15 @@ export function App() {
             if (route.name === "home") {
               return <SongList songs={songs} myPart={myPart} />;
             }
+            if (route.name === "bits") {
+              return (
+                <BitsAndBobsHome
+                  songs={songs}
+                  general={state.manifest.extras ?? []}
+                  myPart={myPart}
+                />
+              );
+            }
             const song = findSong(songs, route.id);
             if (!song) {
               return (
@@ -92,6 +102,9 @@ export function App() {
             if (route.name === "song") return <SongChooser song={song} />;
             if (route.name === "training") {
               return <TrainingPlayer song={song} myPart={myPart} />;
+            }
+            if (route.name === "extras") {
+              return <SongExtras song={song} myPart={myPart} />;
             }
             return <SingingPlayer song={song} myPart={myPart} />;
           })()}

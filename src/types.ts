@@ -41,6 +41,16 @@ export interface TrackFile {
 
 export type PartMap = Partial<Record<PartId, TrackFile>>;
 
+/** A "Bits & Bobs" recording: extra parts and structure notes from Greg. */
+export interface ExtraTrack {
+  id: string;
+  title: string;
+  /** One recording for every part… */
+  all?: TrackFile;
+  /** …or one per part. */
+  parts?: PartMap;
+}
+
 export interface Song {
   id: string;
   title: string;
@@ -48,10 +58,13 @@ export interface Song {
   singing: PartMap;
   /** Greg's teaching recordings, one per part, played individually. */
   training: PartMap;
+  extras?: ExtraTrack[];
 }
 
 export interface Manifest {
   generatedAt: string;
   source: string;
   songs: Song[];
+  /** Bits & Bobs recordings that aren't about a single song. */
+  extras?: ExtraTrack[];
 }

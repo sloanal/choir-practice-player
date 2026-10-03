@@ -59,6 +59,25 @@ for (const song of manifest.songs || []) {
   }
 }
 
+const extraFiles = new Map();
+for (const extra of [...(manifest.extras || []), ...(manifest.songs || []).flatMap((song) => song.extras || [])]) {
+  const files = [extra.all, ...Object.values(extra.parts || {})].filter(Boolean);
+  if (!files.length) failures.push(`Bits & Bobs "${extra.title}" has no recordings.`);
+  for (const file of files) extraFiles.set(file.path, file);
+}
+for (const file of extraFiles.values()) {
+  const absolute = path.join(ROOT, "public", file.path);
+  if (!existsSync(absolute)) {
+    failures.push(`${file.path} does not exist.`);
+    continue;
+  }
+  const stats = await decodeStats(ffmpeg, absolute);
+  if (!stats.samples || !Number.isFinite(stats.rmsDb) || stats.rmsDb < -70) {
+    failures.push(`${file.path} is silent or did not decode.`);
+  }
+  checked++;
+}
+
 console.log(JSON.stringify({ songs: manifest.songs?.length || 0, tracksChecked: checked, failures }, null, 2));
 if (failures.length) process.exit(1);
 

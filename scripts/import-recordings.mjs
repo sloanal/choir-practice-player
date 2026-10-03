@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { groupSongs } from "./lib/grouping.mjs";
+import { EXTRAS_DIR, groupExtras, groupSongs } from "./lib/grouping.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -46,26 +46,39 @@ async function sha256(file) {
 
 const raw = await walk(RECORDINGS);
 const { songs, warnings } = groupSongs(raw, ALIASES);
+const extras = groupExtras(raw, songs);
 const sourceByHash = new Map(raw.map((entry) => [entry.contentHash, entry.localPath]));
-for (const warning of warnings) console.warn("  ! " + warning);
+for (const warning of [...warnings, ...extras.warnings]) console.warn("  ! " + warning);
 
-if (raw.length !== 78 || songs.length !== 13) {
-  throw new Error(`Expected 78 files in 13 songs; found ${raw.length} files in ${songs.length} songs.`);
+if (raw.length !== 90 || songs.length !== 14) {
+  throw new Error(`Expected 90 files in 14 songs; found ${raw.length} files in ${songs.length} songs.`);
 }
 
 await fs.rm(AUDIO, { recursive: true, force: true });
 let copied = 0;
+async function copy(file, relative, label) {
+  // Shared recordings (Bits & Bobs reused as training) are copied once.
+  if (file.path) return;
+  const source = sourceByHash.get(file.contentHash);
+  if (!source) throw new Error(`Could not resolve source for ${label}.`);
+  const destination = path.join(ROOT, "public", relative);
+  await fs.mkdir(path.dirname(destination), { recursive: true });
+  await fs.copyFile(source, destination);
+  file.path = relative;
+  copied++;
+}
+
+const allExtras = [...extras.general, ...songs.flatMap((song) => song.extras || [])];
+for (const extra of allExtras) {
+  if (extra.all) await copy(extra.all, `audio/${EXTRAS_DIR}/${extra.id}.m4a`, extra.id);
+  for (const [part, file] of Object.entries(extra.parts || {})) {
+    await copy(file, `audio/${EXTRAS_DIR}/${extra.id}-${part}.m4a`, `${extra.id}/${part}`);
+  }
+}
 for (const song of songs) {
   for (const kind of ["singing", "training"]) {
     for (const [part, file] of Object.entries(song[kind])) {
-      const source = sourceByHash.get(file.contentHash);
-      if (!source) throw new Error(`Could not resolve source for ${song.id}/${kind}/${part}.`);
-      const relative = `audio/${song.id}/${kind}-${part}.m4a`;
-      const destination = path.join(ROOT, "public", relative);
-      await fs.mkdir(path.dirname(destination), { recursive: true });
-      await fs.copyFile(source, destination);
-      file.path = relative;
-      copied++;
+      await copy(file, `audio/${song.id}/${kind}-${part}.m4a`, `${song.id}/${kind}/${part}`);
     }
   }
 }
@@ -74,6 +87,7 @@ const manifest = {
   generatedAt: new Date().toISOString(),
   source: "verified local Dropbox playback-stream exports",
   songs,
+  extras: extras.general,
 };
 await fs.writeFile(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
 console.log(`Imported ${copied} tracks across ${songs.length} songs.`);
