@@ -1,6 +1,7 @@
 import type { Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
 import { hasExtras, hasSinging, hasTraining, partsOf } from "../lib/songs";
+import { OfflineControls } from "./OfflineControls";
 
 export function SongChooser({ song }: { song: Song }) {
   const singing = hasSinging(song);
@@ -53,6 +54,8 @@ export function SongChooser({ song }: { song: Song }) {
           </button>
         )}
       </div>
+
+      <OfflineControls songs={[song]} scope="song" />
     </div>
   );
 }

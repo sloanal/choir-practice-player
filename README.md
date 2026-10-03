@@ -33,6 +33,13 @@ Dropbox shared folder  ──(local sync/import)──────────�
   Because all audio is served same‑origin (baked into
   the deployed site), there are no CORS issues.
 
+- **Offline**: a service worker (`public/sw.js`) caches the app shell, and
+  **Save offline** (per song, or **Save all songs** on the home page) stores
+  that song's singing and training audio in Cache Storage. Saved files are
+  tagged with their manifest hash; files the manifest drops or changes are
+  deleted on the next load. The worker is only registered in production
+  builds, so use `npm run build && npm run preview` to try it locally.
+
 ## Local development
 
 ```bash

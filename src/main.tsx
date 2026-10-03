@@ -6,5 +6,11 @@ import "./styles.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
+
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  void navigator.serviceWorker
+    .register(new URL("sw.js", document.baseURI))
+    .catch(() => undefined);
+}
