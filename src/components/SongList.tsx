@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import type { PartId, Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
-import { hasSinging, hasTraining, partsOf } from "../lib/songs";
+import { hasExtras, hasSinging, hasTraining, partsOf } from "../lib/songs";
 import { PlaylistPlayer } from "./PlaylistPlayer";
 
 export function SongList({ songs, myPart }: { songs: Song[]; myPart: PartId }) {
   const [query, setQuery] = useState("");
+  const hasBits = songs.some(hasExtras);
 
   const singingSongs = useMemo(
     () => songs.filter(hasSinging).sort((a, b) => a.title.localeCompare(b.title)),
@@ -23,6 +24,18 @@ export function SongList({ songs, myPart }: { songs: Song[]; myPart: PartId }) {
   return (
     <div className="songlist">
       <PlaylistPlayer songs={singingSongs} myPart={myPart} />
+      {hasBits && (
+        <button className="bits-banner" onClick={() => navigate({ name: "bits" })}>
+          <span className="bits-banner-icon">🧩</span>
+          <span>
+            <span className="bits-banner-title">Bits &amp; Bobs &amp; Structure</span>
+            <span className="bits-banner-sub">
+              Greg’s extra parts and song structure notes
+            </span>
+          </span>
+          <span className="bits-banner-arrow">→</span>
+        </button>
+      )}
       <div className="search">
         <input
           type="search"
@@ -48,6 +61,7 @@ export function SongList({ songs, myPart }: { songs: Song[]; myPart: PartId }) {
                     Training · {partsOf(song.training).length}
                   </span>
                 )}
+                {hasExtras(song) && <span className="badge badge-bits">Bits &amp; Bobs</span>}
               </span>
             </button>
           </li>

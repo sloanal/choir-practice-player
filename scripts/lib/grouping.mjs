@@ -36,6 +36,8 @@ export function titleFromFilename(name) {
   // Cut everything from the type marker onward ("... Singing - Mids").
   const marker = base.search(/\b(singing|learn)\b/i);
   if (marker > 0) base = base.slice(0, marker);
+  // Some files skip the type marker ("You belong Bridge to End - Lowers").
+  else base = base.replace(/[\s\-–—]+(highers?|mids?|lowers?)$/i, "");
   // Trim trailing separators/dashes/spaces.
   base = base.replace(/[\s\u2013\u2014\-–—_]+$/g, "").trim();
   return base;
@@ -107,7 +109,7 @@ export function groupSongs(entries, aliases = {}) {
   };
 
   for (const entry of entries) {
-    if (!isAudio(entry.name)) continue;
+    if (!isAudio(entry.name) || isExtrasPath(entry.path)) continue;
     const part = detectPart(entry.path);
     const type = detectType(entry.path);
     if (!part || !type) {
@@ -162,6 +164,100 @@ export function groupSongs(entries, aliases = {}) {
 
   finalSongs.sort((a, b) => a.title.localeCompare(b.title));
   return { songs: finalSongs, groups: songs, warnings };
+}
+
+/** Folder under public/audio holding Bits & Bobs recordings (shared across songs). */
+export const EXTRAS_DIR = "bits-and-bobs";
+
+/** Files in the "Bits&Bobs & Structure" folder: extra parts and structure notes. */
+export function isExtrasPath(path) {
+  const top = path.split("/").filter(Boolean)[0] || "";
+  return /\bbits\s*(&|and)\s*bobs\b/i.test(top);
+}
+
+const PART_WORD = /\b(highers?|mids?|lowers?)\b/gi;
+
+function tidyLabel(text) {
+  const label = text
+    .replace(PART_WORD, "")
+    .replace(/^[\s\-–—+&,!]+|[\s\-–—+&,!]+$/g, "")
+    .replace(/\s+/g, " ");
+  return label ? label[0].toUpperCase() + label.slice(1) : "";
+}
+
+/** Strip parenthetical sections so "Fix You (Bridge)" matches "Fix You". */
+function baseTitle(title) {
+  return normalizeTitle(title).replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Attach Bits & Bobs recordings to every song section whose title starts with
+ * the recording's song name ("The Chain B&B - structure" → all Chain sections).
+ * Recordings that match no song (the general explanation) are returned in
+ * `general`. Per-part recordings fill in missing training for matched songs.
+ *
+ * Returns { general, warnings }; mutates `songs` (adds `extras`, may add training).
+ * Each extra file keeps `sourcePath` for the caller to resolve.
+ */
+export function groupExtras(entries, songs) {
+  const extras = new Map();
+  const warnings = [];
+
+  for (const entry of entries) {
+    if (!isAudio(entry.name) || !isExtrasPath(entry.path)) continue;
+    const base = entry.name.replace(/\.[^.]+$/, "").trim();
+    const split = base.match(/^(.*?)\s*(?:\bB\s*&\s*B\b|\s[-–—]\s)\s*(.*)$/i);
+    const songText = split ? split[1] : base;
+    const label = split ? tidyLabel(split[2]) : "";
+    const key = `${normalizeTitle(songText)}|${normalizeTitle(label)}`;
+    let extra = extras.get(key);
+    if (!extra) {
+      extra = { base, songText, label, files: {} };
+      extras.set(key, extra);
+    }
+    const part = detectPart(entry.name) || "all";
+    if (extra.files[part]) {
+      warnings.push(`Duplicate Bits & Bobs recording: ${entry.path} (keeping first)`);
+      continue;
+    }
+    extra.files[part] = {
+      name: entry.name,
+      size: entry.size,
+      contentHash: entry.contentHash,
+      modified: entry.modified,
+      sourcePath: entry.path,
+    };
+  }
+
+  const general = [];
+  for (const extra of extras.values()) {
+    const key = normalizeTitle(extra.songText);
+    const matches = songs.filter((song) => {
+      const title = baseTitle(song.title);
+      return title === key || title.startsWith(key + " ");
+    });
+    const { all, ...parts } = extra.files;
+    const item = {
+      id: slugify(normalizeTitle([extra.songText, extra.label].filter(Boolean).join(" "))),
+      title: matches.length ? extra.label || "Bits & Bobs" : tidyLabel(extra.base),
+    };
+    if (all) item.all = all;
+    if (Object.keys(parts).length) item.parts = parts;
+
+    if (!matches.length) {
+      general.push(item);
+      continue;
+    }
+    for (const song of matches) {
+      (song.extras ||= []).push(item);
+      for (const [part, file] of Object.entries(parts)) {
+        if (!song.training[part]) song.training[part] = file;
+      }
+    }
+  }
+
+  general.sort((a, b) => a.title.localeCompare(b.title));
+  return { general, warnings };
 }
 
 function hasAny(map) {

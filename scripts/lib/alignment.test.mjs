@@ -6,7 +6,7 @@ import { validateRecipe, recipeFingerprint } from "./alignment.mjs";
 const recipes = JSON.parse(fs.readFileSync(new URL("../audio-alignment.json", import.meta.url), "utf8"));
 const good = () => structuredClone(recipes.songs["you-belong-with-me"]);
 test("every reviewed song has three monotonic maps on the same timeline", () => {
-  assert.equal(Object.keys(recipes.songs).length, 13);
+  assert.equal(Object.keys(recipes.songs).length, 14);
   for (const recipe of Object.values(recipes.songs)) validateRecipe(recipe);
 });
 test("reject reversed source time, overlapping sections, and mismatched trios", () => {

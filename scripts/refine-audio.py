@@ -32,7 +32,13 @@ SPECIAL = {
         {'high': [3.9, 27.7], 'mid': [3.37, 26.55], 'low': [3.01, 26.5]},
         {'high': [29.61, 65.7], 'mid': [28.14, 68.0], 'low': [28.23, 65.45]},
     ],
+    # Starts at the unison entrance, after Greg's spoken context over the bridge.
+    'you-belong-with-me-bridge-to-end': [
+        {'high': [19.85, 66.2], 'mid': [19.8, 66.25], 'low': [19.9, 66.1]},
+    ],
 }
+# Songs added after the baseline pass have no coarse offset/tempo map.
+NEW = {'you-belong-with-me-bridge-to-end': {'title': 'You Belong with Me (Bridge to End)', 'referencePart': 'high'}}
 # Reference start (includes a little pre-attack air), in the old timeline.
 START = {'because-the-night': 2.02, 'blinding-lights': 1.85,
          'closer-to-fine': 2.18, 'diamonds': 2.43, 'fix-you-bridge': 2.65,
@@ -90,7 +96,7 @@ def timing_map(reference, source, rr, sr, muted=()):
     return knots, values
 
 def build(sid, old):
-    recipe=old['songs'][sid]
+    recipe=old['songs'].get(sid) or NEW[sid]
     feat=get_features(get_song(sid))
     ref=recipe['referencePart']
     ranges=SPECIAL.get(sid)
@@ -152,6 +158,6 @@ if __name__=='__main__':
     old=json.loads(OLD.read_text())
     dest=WORK/'alignment-candidate.json'
     result=json.loads(dest.read_text()) if dest.exists() else {'version':5,'method':'musical-section-keyframes','songs':{}}
-    for sid in sys.argv[1:] or old['songs']:
+    for sid in sys.argv[1:] or [*old['songs'], *NEW]:
         result['songs'][sid]=build(sid,old);plot(sid,result['songs'][sid])
         dest.write_text(json.dumps(result,indent=2)+'\n');print(sid,flush=True)

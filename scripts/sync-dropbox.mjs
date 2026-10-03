@@ -12,7 +12,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { extOf, groupSongs } from "./lib/grouping.mjs";
+import { EXTRAS_DIR, extOf, groupExtras, groupSongs } from "./lib/grouping.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -154,17 +154,22 @@ async function loadPrevManifest() {
 function prevHashByPath(prev) {
   const map = new Map();
   if (!prev) return map;
+  const remember = (file) => {
+    // Prepared tracks keep the original payload beside the rendered
+    // output, so the raw cache can be safely reused on the next sync.
+    const cachedPath = file.rawPath || file.path;
+    if (cachedPath && file.contentHash) map.set(cachedPath, file.contentHash);
+  };
+  const extras = [...(prev.extras || [])];
   for (const song of prev.songs || []) {
     for (const group of ["singing", "training"]) {
-      for (const file of Object.values(song[group] || {})) {
-        // Prepared tracks keep the original payload beside the rendered
-        // output, so the raw cache can be safely reused on the next sync.
-        const cachedPath = file.rawPath || file.path;
-        if (cachedPath && file.contentHash) {
-          map.set(cachedPath, file.contentHash);
-        }
-      }
+      Object.values(song[group] || {}).forEach(remember);
     }
+    extras.push(...(song.extras || []));
+  }
+  for (const extra of extras) {
+    if (extra.all) remember(extra.all);
+    Object.values(extra.parts || {}).forEach(remember);
   }
   return map;
 }
@@ -178,7 +183,8 @@ async function main() {
   console.log(`Found ${rawEntries.length} files in the shared folder.`);
 
   const { songs, warnings } = groupSongs(rawEntries, aliases);
-  for (const w of warnings) console.warn("  ! " + w);
+  const extras = groupExtras(rawEntries, songs);
+  for (const w of [...warnings, ...extras.warnings]) console.warn("  ! " + w);
   console.log(`Grouped into ${songs.length} songs.`);
 
   const prev = await loadPrevManifest();
@@ -187,27 +193,35 @@ async function main() {
   let downloaded = 0;
   let skipped = 0;
 
+  async function fetchFile(file, relNoExt) {
+    // Shared recordings (Bits & Bobs reused as training) are fetched once.
+    if (file.path) return;
+    const rel = relNoExt + (extOf(file.name) || ".m4a");
+    const dest = path.join(ROOT, "public", rel);
+    const unchanged = prevHashes.get(rel) === file.contentHash && existsSync(dest);
+    if (unchanged) {
+      skipped++;
+    } else {
+      process.stdout.write(`  ↓ ${rel} … `);
+      await downloadFile(token, file.sourcePath, dest);
+      downloaded++;
+      console.log("done");
+    }
+    file.path = rel;
+    delete file.sourcePath;
+  }
+
+  const allExtras = [...extras.general, ...songs.flatMap((song) => song.extras || [])];
+  for (const extra of allExtras) {
+    if (extra.all) await fetchFile(extra.all, `audio/${EXTRAS_DIR}/${extra.id}`);
+    for (const [part, file] of Object.entries(extra.parts || {})) {
+      await fetchFile(file, `audio/${EXTRAS_DIR}/${extra.id}-${part}`);
+    }
+  }
   for (const song of songs) {
     for (const group of ["singing", "training"]) {
       for (const [part, file] of Object.entries(song[group])) {
-        const ext = extOf(file.name) || ".m4a";
-        const rel = `audio/${song.id}/${group}-${part}${ext}`;
-        const dest = path.join(ROOT, "public", rel);
-        const sourcePath = file.sourcePath;
-
-        const unchanged =
-          prevHashes.get(rel) === file.contentHash && existsSync(dest);
-        if (unchanged) {
-          skipped++;
-        } else {
-          process.stdout.write(`  ↓ ${rel} … `);
-          await downloadFile(token, sourcePath, dest);
-          downloaded++;
-          console.log("done");
-        }
-
-        file.path = rel;
-        delete file.sourcePath;
+        await fetchFile(file, `audio/${song.id}/${group}-${part}`);
       }
     }
   }
@@ -219,6 +233,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: SHARED_LINK,
     songs,
+    extras: extras.general,
   };
   await fs.mkdir(path.dirname(MANIFEST_PATH), { recursive: true });
   await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
@@ -230,7 +245,7 @@ async function main() {
 
 async function pruneOrphans(songs) {
   if (!existsSync(AUDIO_DIR)) return;
-  const keep = new Set(songs.map((s) => s.id));
+  const keep = new Set([...songs.map((s) => s.id), EXTRAS_DIR]);
   const dirs = await fs.readdir(AUDIO_DIR, { withFileTypes: true });
   for (const d of dirs) {
     if (d.isDirectory() && !keep.has(d.name)) {

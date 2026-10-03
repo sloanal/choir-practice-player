@@ -44,7 +44,13 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
         src={src}
         loop={loop}
         preload="auto"
-        onPlay={() => setPlaying(true)}
+        onPlay={(e) => {
+          // Pages like Bits & Bobs show several players; only one should sound.
+          for (const other of document.querySelectorAll<HTMLAudioElement>(".player audio")) {
+            if (other !== e.currentTarget) other.pause();
+          }
+          setPlaying(true);
+        }}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
