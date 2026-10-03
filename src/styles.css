@@ -767,3 +767,83 @@ input[type="range"]::-moz-range-thumb {
     display: none;
   }
 }
+
+/* --- Offline --- */
+.offline-pill {
+  margin-left: auto;
+  margin-right: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--learn);
+  border: 1px solid color-mix(in srgb, var(--learn) 45%, transparent);
+}
+
+.offline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+.chooser .offline {
+  margin-top: 24px;
+}
+
+.offline-saved {
+  border-color: color-mix(in srgb, var(--sing) 35%, var(--border));
+}
+
+.offline-saved .offline-status {
+  color: var(--sing);
+}
+
+.offline-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.offline-error {
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.offline-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--bg-elev2);
+  overflow: hidden;
+}
+
+.offline-bar > div {
+  height: 100%;
+  background: var(--sing);
+  transition: width 0.2s ease;
+}
+
+.offline-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-offline {
+  color: var(--sing);
+  border-color: color-mix(in srgb, var(--sing) 25%, transparent);
+  background: color-mix(in srgb, var(--sing) 10%, transparent);
+}
+
+.badge-unsaved {
+  color: var(--muted);
+}
