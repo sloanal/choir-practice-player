@@ -13,6 +13,10 @@ export function hasSinging(song: Song): boolean {
   return partsOf(song.singing).length > 0;
 }
 
+export function hasExtras(song: Song): boolean {
+  return (song.extras?.length ?? 0) > 0;
+}
+
 export function resolveUrl(path: string): string {
   return new URL(path, document.baseURI).href;
 }
