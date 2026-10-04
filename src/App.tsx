@@ -73,14 +73,15 @@ export function App() {
         {state.status === "ready" &&
           (() => {
             const songs = state.manifest.songs;
+            const general = state.manifest.extras ?? [];
             if (route.name === "home") {
-              return <SongList songs={songs} myPart={myPart} />;
+              return <SongList songs={songs} general={general} myPart={myPart} />;
             }
             if (route.name === "bits") {
               return (
                 <BitsAndBobsHome
                   songs={songs}
-                  general={state.manifest.extras ?? []}
+                  general={general}
                   myPart={myPart}
                 />
               );

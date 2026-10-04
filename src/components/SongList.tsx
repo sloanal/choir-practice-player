@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { PartId, Song } from "../types";
+import type { ExtraTrack, PartId, Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
 import { hasExtras, hasSinging, hasTraining, partsOf } from "../lib/songs";
 import { PlaylistPlayer } from "./PlaylistPlayer";
@@ -11,7 +11,11 @@ import {
   useOffline,
 } from "../offline/offlineStore";
 
-export function SongList({ songs, myPart }: { songs: Song[]; myPart: PartId }) {
+export function SongList({ songs, general, myPart }: {
+  songs: Song[];
+  general: ExtraTrack[];
+  myPart: PartId;
+}) {
   const [query, setQuery] = useState("");
   const hasBits = songs.some(hasExtras);
   const offline = useOffline();
@@ -34,7 +38,7 @@ export function SongList({ songs, myPart }: { songs: Song[]; myPart: PartId }) {
   return (
     <div className="songlist">
       <PlaylistPlayer songs={singingSongs} myPart={myPart} />
-      <OfflineControls songs={songs} scope="all" />
+      <OfflineControls songs={songs} extras={general} scope="all" />
       {hasBits && (
         <button className="bits-banner" onClick={() => navigate({ name: "bits" })}>
           <span className="bits-banner-icon">🧩</span>
