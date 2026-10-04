@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Song } from "../types";
+import type { ExtraTrack, Song } from "../types";
 import { formatBytes } from "../lib/format";
 import {
   cancelSongs,
@@ -12,15 +12,18 @@ import {
 
 /**
  * Save / remove offline copies of one song (`scope="song"`) or the whole
- * library (`scope="all"`).
+ * library (`scope="all"`), including their Bits & Bobs. `extras` adds the
+ * Bits & Bobs that aren't tied to a song.
  */
-export function OfflineControls(
-  { songs, scope }: { songs: Song[]; scope: "song" | "all" },
-) {
+export function OfflineControls({ songs, extras = [], scope }: {
+  songs: Song[];
+  extras?: ExtraTrack[];
+  scope: "song" | "all";
+}) {
   const snap = useOffline();
   if (!offlineSupported || songs.length === 0) return null;
 
-  const { state, bytes, total } = summarize(snap, songs);
+  const { state, bytes, total } = summarize(snap, songs, extras);
   const pct = total > 0 ? Math.floor((bytes / total) * 100) : 0;
   const all = scope === "all";
 
@@ -29,7 +32,7 @@ export function OfflineControls(
       all &&
       !window.confirm("Remove all offline audio from this device?")
     ) return;
-    void removeSongs(songs);
+    void removeSongs(songs, extras);
   };
 
   let status: string;
@@ -43,7 +46,7 @@ export function OfflineControls(
       formatBytes(total)
     })`;
     secondary = (
-      <button className="chip" onClick={() => cancelSongs(songs)}>
+      <button className="chip" onClick={() => cancelSongs(songs, extras)}>
         Cancel
       </button>
     );
@@ -64,7 +67,7 @@ export function OfflineControls(
       ? "Listen without a connection"
       : "Play this song without a connection";
     action = (
-      <button className="btn" onClick={() => void saveSongs(songs)}>
+      <button className="btn" onClick={() => void saveSongs(songs, extras)}>
         ⬇ {state === "partial"
           ? "Save the rest"
           : all

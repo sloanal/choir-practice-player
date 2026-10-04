@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { partsOf, resolveUrl } from "../lib/songs";
-import type { Manifest, Song, TrackFile } from "../types";
+import type { ExtraTrack, Manifest, Song, TrackFile } from "../types";
 
 /** Must match AUDIO_CACHE in public/sw.js, which serves these entries. */
 const AUDIO_CACHE = "choir-audio-v1";
@@ -77,10 +77,28 @@ function versionOf(file: TrackFile): string {
   return `${file.contentHash ?? ""}:${file.size}`;
 }
 
-export function songEntries(song: Song): Entry[] {
-  const files = [song.singing, song.training].flatMap((map) =>
-    partsOf(map).map((p) => map[p]!)
-  );
+function extraFiles(extra: ExtraTrack): TrackFile[] {
+  const parts = extra.parts ?? {};
+  return [
+    ...(extra.all ? [extra.all] : []),
+    ...partsOf(parts).map((p) => parts[p]!),
+  ];
+}
+
+/**
+ * Every audio file for these songs (singing, training and their Bits & Bobs)
+ * plus any standalone Bits & Bobs, once each — songs can share a recording.
+ */
+function entriesOf(songs: Song[], extras: ExtraTrack[] = []): Entry[] {
+  const files = [
+    ...songs.flatMap((song) => [
+      ...[song.singing, song.training].flatMap((map) =>
+        partsOf(map).map((p) => map[p]!)
+      ),
+      ...(song.extras ?? []).flatMap(extraFiles),
+    ]),
+    ...extras.flatMap(extraFiles),
+  ];
   const byUrl = new Map<string, Entry>();
   for (const f of files) {
     const url = resolveUrl(f.path);
@@ -92,13 +110,14 @@ export function songEntries(song: Song): Entry[] {
 export function summarize(
   snap: OfflineSnapshot,
   songs: Song[],
+  extras: ExtraTrack[] = [],
 ): OfflineSummary {
   let bytes = 0;
   let total = 0;
   let savedCount = 0;
   let count = 0;
   let saving = false;
-  for (const e of songs.flatMap(songEntries)) {
+  for (const e of entriesOf(songs, extras)) {
     count++;
     total += e.size;
     if (snap.saved.has(e.url)) {
@@ -134,8 +153,8 @@ export function syncWithManifest(manifest: Manifest): Promise<void> {
   if (!offlineSupported) return Promise.resolve();
   readyPromise ??= (async () => {
     const wanted = new Map<string, string>();
-    for (const song of manifest.songs) {
-      for (const e of songEntries(song)) wanted.set(e.url, e.version);
+    for (const e of entriesOf(manifest.songs, manifest.extras)) {
+      wanted.set(e.url, e.version);
     }
     try {
       const cache = await caches.open(AUDIO_CACHE);
@@ -157,12 +176,15 @@ export function syncWithManifest(manifest: Manifest): Promise<void> {
   return readyPromise;
 }
 
-export async function saveSongs(songs: Song[]): Promise<void> {
+export async function saveSongs(
+  songs: Song[],
+  extras: ExtraTrack[] = [],
+): Promise<void> {
   if (!offlineSupported) return;
   await readyPromise;
   void navigator.storage?.persist?.().catch(() => false);
   error = null;
-  for (const e of songs.flatMap(songEntries)) {
+  for (const e of entriesOf(songs, extras)) {
     if (saved.has(e.url) || pending.has(e.url)) continue;
     pending.set(e.url, 0);
     queue.push(e);
@@ -171,8 +193,8 @@ export async function saveSongs(songs: Song[]): Promise<void> {
   pump();
 }
 
-export function cancelSongs(songs: Song[]): void {
-  const urls = new Set(songs.flatMap(songEntries).map((e) => e.url));
+export function cancelSongs(songs: Song[], extras: ExtraTrack[] = []): void {
+  const urls = new Set(entriesOf(songs, extras).map((e) => e.url));
   for (let i = queue.length - 1; i >= 0; i--) {
     if (urls.has(queue[i].url)) queue.splice(i, 1);
   }
@@ -183,10 +205,13 @@ export function cancelSongs(songs: Song[]): void {
   emit();
 }
 
-export async function removeSongs(songs: Song[]): Promise<void> {
-  cancelSongs(songs);
+export async function removeSongs(
+  songs: Song[],
+  extras: ExtraTrack[] = [],
+): Promise<void> {
+  cancelSongs(songs, extras);
   const cache = await caches.open(AUDIO_CACHE);
-  for (const e of songs.flatMap(songEntries)) {
+  for (const e of entriesOf(songs, extras)) {
     await cache.delete(e.url);
     saved.delete(e.url);
   }
