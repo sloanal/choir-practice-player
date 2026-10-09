@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import ts from "typescript";
 
-// Execute the actual TypeScript engine with small Web Audio fakes, not a copy
-// of the mix/scheduling logic. No browser, network or user recordings required.
+// Execute the actual TypeScript engine with small media/decoder fakes, not a
+// copy of the mix/scheduling logic. No browser, network or user recordings.
 const source = fs.readFileSync(
   new URL("../../src/audio/engine.ts", import.meta.url),
   "utf8",
@@ -19,56 +19,96 @@ const { LayeredPlayer } = await import(
   "data:text/javascript;base64," + Buffer.from(js).toString("base64")
 );
 
-test("iOS playback uses the media audio session so the silent switch is ignored", async () => {
-  const originalWindow = globalThis.window, originalFetch = globalThis.fetch;
-  class FakeAudioContext {
-    currentTime = 0;
-    state = "running";
-    destination = {};
-    createGain() {
-      return { gain: { value: 1 }, connect() {} };
-    }
-    createBuffer() {
-      return {};
-    }
-    async decodeAudioData() {
-      return {
-        duration: 4,
-        numberOfChannels: 1,
-        getChannelData: () => new Float32Array([.5]),
-      };
-    }
-    createBufferSource() {
-      return {
-        playbackRate: { value: 1 },
-        connect() {},
-        stop() {},
-        disconnect() {},
-        start() {},
-      };
-    }
-    async resume() {}
-    async close() {}
-  }
+const SR = 44100;
+
+function fakeBuffer(samples, seconds = 4) {
+  const length = SR * seconds;
+  const data = new Float32Array(length);
+  data.set(samples);
+  return {
+    duration: seconds,
+    length,
+    sampleRate: SR,
+    numberOfChannels: 1,
+    getChannelData: () => data,
+  };
+}
+
+/** Installs fakes; returns the created media elements and object-URL blobs. */
+function installFakes(samples) {
   const media = [];
-  const audioSession = { type: "auto" };
+  const blobs = new Map();
+  let nextUrl = 0;
+  const original = {
+    window: globalThis.window,
+    create: URL.createObjectURL,
+    revoke: URL.revokeObjectURL,
+    fetch: globalThis.fetch,
+  };
+  globalThis.fetch = async () => ({
+    ok: true,
+    arrayBuffer: async () => new ArrayBuffer(1),
+  });
+  URL.createObjectURL = (blob) => {
+    const url = `blob:test/${nextUrl++}`;
+    blobs.set(url, blob);
+    return url;
+  };
+  URL.revokeObjectURL = (url) => blobs.delete(url);
+  class FakeOfflineAudioContext {
+    decodeAudioData() {
+      return Promise.resolve(fakeBuffer(samples));
+    }
+  }
   globalThis.window = {
-    AudioContext: FakeAudioContext,
-    navigator: {
-      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)",
-      audioSession,
-    },
+    OfflineAudioContext: FakeOfflineAudioContext,
     document: {
       createElement() {
+        const listeners = {};
         const el = {
           paused: true,
+          ended: false,
+          muted: false,
+          loop: false,
+          currentTime: 0,
+          playbackRate: 1,
+          defaultPlaybackRate: 1,
           attrs: {},
+          plays: 0,
+          _src: "",
+          get src() {
+            return this._src;
+          },
+          set src(v) {
+            this._src = v;
+            this.attrs.src = v;
+            this.paused = true;
+            this.currentTime = 0;
+            this.playbackRate = this.defaultPlaybackRate;
+            queueMicrotask(() => this.emit("loadedmetadata"));
+          },
           setAttribute(k, v) {
             this.attrs[k] = v;
           },
-          removeAttribute() {},
+          getAttribute(k) {
+            return this.attrs[k] ?? null;
+          },
+          removeAttribute(k) {
+            delete this.attrs[k];
+            if (k === "src") this._src = "";
+          },
+          addEventListener(type, fn) {
+            (listeners[type] ??= []).push(fn);
+          },
+          removeEventListener(type, fn) {
+            listeners[type] = (listeners[type] ?? []).filter((f) => f !== fn);
+          },
+          emit(type) {
+            for (const fn of [...(listeners[type] ?? [])]) fn();
+          },
           load() {},
           play() {
+            this.plays++;
             this.paused = false;
             return Promise.resolve();
           },
@@ -81,108 +121,147 @@ test("iOS playback uses the media audio session so the silent switch is ignored"
       },
     },
   };
-  globalThis.fetch = async () => ({
-    ok: true,
-    arrayBuffer: async () => new ArrayBuffer(1),
-  });
-  try {
-    const player = new LayeredPlayer();
-    assert.equal(audioSession.type, "playback");
-    await player.load([{ id: "a", url: "a", onset: 0 }]);
-    audioSession.type = "auto";
-    await player.play();
-    assert.equal(audioSession.type, "playback");
-    assert.equal(media.length, 1);
-    assert.equal(media[0].loop, true);
-    assert.equal(
-      media[0].paused,
-      false,
-      "silent media element keeps the playback session alive",
-    );
-    player.pause();
-    assert.equal(media[0].paused, true);
-    await player.play();
-    assert.equal(media.length, 1, "keep-alive element is reused");
-    assert.equal(media[0].paused, false);
-    player.dispose();
-    assert.equal(media[0].paused, true);
-  } finally {
-    globalThis.window = originalWindow;
-    globalThis.fetch = originalFetch;
-  }
-});
+  const restore = () => {
+    globalThis.window = original.window;
+    globalThis.fetch = original.fetch;
+    URL.createObjectURL = original.create;
+    URL.revokeObjectURL = original.revoke;
+  };
+  return { media, blobs, restore };
+}
 
-test("shared start time, authored zero point, clean trio mix and full-level solo", async () => {
-  const originalWindow = globalThis.window, originalFetch = globalThis.fetch;
-  let context;
-  class FakeAudioContext {
-    currentTime = 10;
-    state = "running";
-    destination = {};
-    gains = [];
-    sources = [];
-    constructor(options) {
-      this.options = options;
-      context = this;
-    }
-    createGain() {
-      const node = { gain: { value: 1 }, connect() {} };
-      this.gains.push(node);
-      return node;
-    }
-    async decodeAudioData() {
-      return {
-        duration: 4,
-        numberOfChannels: 1,
-        getChannelData: () => new Float32Array([.8, -.8, .1]),
-      };
-    }
-    createBufferSource() {
-      const node = {
-        playbackRate: { value: 1 },
-        connect() {},
-        stop() {},
-        disconnect() {},
-        start(...args) {
-          this.started = args;
-        },
-      };
-      this.sources.push(node);
-      return node;
-    }
-    async resume() {}
-    async close() {}
-  }
-  globalThis.window = { AudioContext: FakeAudioContext };
-  globalThis.fetch = async () => ({
-    ok: true,
-    arrayBuffer: async () => new ArrayBuffer(1),
-  });
+/** First left-channel sample of the WAV the element is currently playing. */
+async function firstSample(el, blobs) {
+  const bytes = await blobs.get(el.src).arrayBuffer();
+  return new DataView(bytes).getInt16(44, true) / 0x7fff;
+}
+
+const settle = () => new Promise((r) => setTimeout(r, 200));
+
+test("plays one pre-mixed stream through a media element, not Web Audio", async () => {
+  const { media, blobs, restore } = installFakes([.5]);
   try {
     const player = new LayeredPlayer();
-    assert.equal(
-      context.options?.latencyHint,
-      "playback",
-      "large output buffer so Bluetooth output does not underrun",
-    );
+    assert.equal(media.length, 1);
+    assert.equal(media[0].attrs.playsinline, "");
+    assert.equal(window.AudioContext, undefined, "no live AudioContext needed");
     await player.load(
       ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
     );
-    assert.ok(context.gains[0].gain.value * 2.4 <= .950001, "sum cannot clip");
+    const el = media[0];
+    assert.equal(blobs.get(el.src).type, "audio/wav");
+    assert.ok((await blobs.get(el.src).size) > SR * 4 * 4, "whole song, stereo");
+
     await player.play();
-    assert.equal(context.sources.length, 3);
-    for (const node of context.sources) assert.deepEqual(node.started, [10, 0]);
-    player.toggleSolo("mid");
-    assert.equal(
-      context.gains[0].gain.value,
-      1,
-      "isolated track retains normal level",
+    assert.equal(el.paused, false);
+    el.currentTime = 1.5;
+    assert.equal(player.getPosition(), 1.5);
+
+    player.setPlaybackRate(.75);
+    assert.equal(el.playbackRate, .75);
+    player.pause();
+    assert.equal(el.paused, true);
+    assert.equal(player.getPosition(), 1.5);
+
+    let ended = 0;
+    player.onEnded = () => ended++;
+    await player.play();
+    el.ended = true;
+    el.emit("pause");
+    el.emit("ended");
+    assert.equal(ended, 1, "natural end is reported once");
+    assert.equal(player.isPlaying, false);
+    player.dispose();
+    assert.equal(el.paused, true);
+    assert.equal(blobs.size, 0, "mix URL released");
+  } finally {
+    restore();
+  }
+});
+
+test("authored zero point, clean trio mix and full-level solo", async () => {
+  const { media, blobs, restore } = installFakes([.8, -.8, .1]);
+  try {
+    const player = new LayeredPlayer();
+    await player.load(
+      ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
     );
+    const el = media[0];
+    const trio = await firstSample(el, blobs);
+    assert.ok(trio <= .950001 && trio > .94, `sum cannot clip (${trio})`);
+
+    player.toggleSolo("mid");
+    await settle();
+    const solo = await firstSample(el, blobs);
+    assert.ok(Math.abs(solo - .8) < 1e-3, "isolated track retains normal level");
+
     player.setMasterVolume(.5);
-    assert.equal(context.gains[0].gain.value, .5);
+    await settle();
+    assert.ok(Math.abs((await firstSample(el, blobs)) - .4) < 1e-3);
     player.dispose();
   } finally {
-    globalThis.window = originalWindow;
-    globalThis.fetch = originalFetch;
+    restore();
+  }
+});
+
+test("mix changes swap in at the current position and keep playing", async () => {
+  const { media, restore } = installFakes([.5]);
+  try {
+    const player = new LayeredPlayer();
+    await player.load(
+      ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
+    );
+    const el = media[0];
+    await player.play();
+    el.currentTime = 2;
+    const before = el.src;
+    player.setMuted("low", true);
+    await settle();
+    assert.notEqual(el.src, before, "re-rendered");
+    assert.equal(el.currentTime, 2, "resumed where it was");
+    assert.equal(el.paused, false, "still playing");
+    assert.equal(player.isPlaying, true);
+    player.dispose();
+  } finally {
+    restore();
+  }
+});
+
+test("loop renders just the region and loops it natively", async () => {
+  const { media, blobs, restore } = installFakes([.5]);
+  try {
+    const player = new LayeredPlayer();
+    await player.load([{ id: "a", url: "a", onset: 0 }]);
+    const el = media[0];
+    player.setLoopRegion(1, 2);
+    player.setLoopEnabled(true);
+    await settle();
+    assert.equal(el.loop, true);
+    const size = blobs.get(el.src).size;
+    assert.equal(size, 44 + SR * 1 * 2 * 2, "one second, stereo 16-bit");
+    await player.play();
+    assert.equal(el.currentTime, 0, "playhead moved into the loop");
+    el.currentTime = .25;
+    assert.equal(player.getPosition(), 1.25);
+    player.dispose();
+  } finally {
+    restore();
+  }
+});
+
+test("unlock grants a gesture silently without starting playback", async () => {
+  const { media, restore } = installFakes([.5]);
+  try {
+    const player = new LayeredPlayer();
+    await player.unlock();
+    const el = media[0];
+    assert.equal(el.plays, 1);
+    assert.equal(el.paused, true);
+    assert.equal(el.muted, false);
+    el.emit("play");
+    assert.equal(player.isPlaying, false, "the unlock's own play is ignored");
+    player.dispose();
+  } finally {
+    restore();
   }
 });

@@ -1,7 +1,18 @@
 /**
- * LayeredPlayer: plays several audio tracks in tight sync using a single
- * AudioContext, with per-track gain (volume / mute / solo), onset alignment,
- * region looping, seeking and variable playback rate.
+ * LayeredPlayer: plays several audio tracks in tight sync, with per-track gain
+ * (volume / mute / solo), onset alignment, region looping, seeking and
+ * variable playback rate.
+ *
+ * Output model
+ * ------------
+ * The tracks are decoded once, then mixed sample-accurately into a single WAV
+ * that plays through one ordinary <audio> element. Mixing in advance (rather
+ * than live through an AudioContext) means playback goes through the
+ * platform's media pipeline, the same one music apps use. On iOS, Web Audio
+ * output stutters on some Bluetooth receivers such as car stereos, and stops
+ * when the screen locks; a media element handles both like any music app.
+ * Changing the mix re-renders it (a few tens of milliseconds for a song) and
+ * swaps it in at the current position.
  *
  * Alignment model
  * ---------------
@@ -20,14 +31,11 @@ export interface TrackInput {
 
 interface Track {
   id: string;
-  bytes: ArrayBuffer;
   buffer: AudioBuffer;
-  gain: GainNode;
   peak: number;
   /** Detected leading silence + manual nudge, in seconds (>= 0). */
   onset: number;
   detectedOnset: number;
-  source: AudioBufferSourceNode | null;
   volume: number;
   muted: boolean;
   soloed: boolean;
@@ -43,17 +51,23 @@ export interface TrackState {
   duration: number;
 }
 
+/** Every rendered part is 44.1 kHz; decoding at that rate avoids resampling. */
+const MIX_SAMPLE_RATE = 44100;
+/** Coalesces bursts of mix changes (e.g. dragging a volume slider). */
+const RENDER_DELAY_MS = 120;
+/** Fade at loop edges so the wrap-around does not click. */
+const LOOP_FADE_SECONDS = 0.005;
+
 export class LayeredPlayer {
-  private ctx: AudioContext;
-  private master: GainNode;
-  private rebuiltContextForMobile = false;
-  private mediaSessionKeepAlive = new SilentMediaKeepAlive();
+  private decoder: BaseAudioContext;
+  private el: HTMLAudioElement;
+  private mixUrl: string | null = null;
+  /** Timeline position where the current mix begins (loop start, or 0). */
+  private mixStart = 0;
   private masterVolume = 1;
   private tracks: Track[] = [];
 
   private playing = false;
-  private startCtxTime = 0;
-  private startPos = 0;
   private pausedPos = 0;
   private rate = 1;
 
@@ -62,42 +76,59 @@ export class LayeredPlayer {
   private loopEnd = 0;
 
   private loadToken = 0;
+  private renderToken = 0;
+  private renderTimer: ReturnType<typeof setTimeout> | null = null;
+  /** While a new mix loads, the element's clock is meaningless. */
+  private swapping = false;
+  private disposed = false;
 
   onEnded: (() => void) | null = null;
 
   constructor() {
-    requestPlaybackAudioSession();
-    this.ctx = createPlaybackContext();
-    this.master = this.ctx.createGain();
-    this.master.connect(this.ctx.destination);
-    this.watchContextState();
+    this.decoder = createDecoder();
+    const el = window.document.createElement("audio");
+    el.preload = "auto";
+    el.setAttribute("playsinline", "");
+    setPreservesPitch(el, false);
+    el.addEventListener("ended", () => this.handleNaturalEnd());
+    // Lock-screen, headphone and car controls act on the element directly.
+    el.addEventListener("pause", () => {
+      if (this.swapping || !this.playing || el.ended) return;
+      this.pausedPos = this.getPosition();
+      this.playing = false;
+    });
+    el.addEventListener("play", () => {
+      if (this.swapping || this.playing || el.paused) return;
+      if (this.tracks.length === 0) return;
+      this.pausedPos = this.getPosition();
+      this.playing = true;
+    });
+    this.el = el;
   }
 
   /**
    * Load a set of tracks, replacing any previously loaded ones. Can be called
-   * repeatedly to reuse one AudioContext across songs. Resolves `false` when a
-   * newer `load()` call superseded this one.
+   * repeatedly to reuse one media element across songs. Resolves `false` when
+   * a newer `load()` call superseded this one.
    */
   async load(
     inputs: TrackInput[],
     fetchBytes: (url: string) => Promise<ArrayBuffer> = fetchArrayBuffer
   ): Promise<boolean> {
     const token = ++this.loadToken;
-    this.stopSources();
+    this.cancelScheduledRender();
     this.playing = false;
+    this.el.pause();
     this.pausedPos = 0;
     this.loopOn = false;
     this.loopStart = 0;
-    for (const t of this.tracks) t.gain.disconnect();
     this.tracks = [];
 
-    const ctx = this.ctx;
     const loaded = await Promise.all(
       inputs.map(async (input) => {
         const bytes = await fetchBytes(input.url);
-        const buffer = await ctx.decodeAudioData(bytes);
+        const buffer = await decode(this.decoder, bytes);
         const onset = input.onset ?? detectOnset(buffer);
-        const gain = ctx.createGain();
         let peak = 0;
         for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
           const samples = buffer.getChannelData(channel);
@@ -107,13 +138,10 @@ export class LayeredPlayer {
         }
         const track: Track = {
           id: input.id,
-          bytes,
           buffer,
-          gain,
           peak,
           onset,
           detectedOnset: onset,
-          source: null,
           volume: 1,
           muted: false,
           soloed: false,
@@ -121,12 +149,11 @@ export class LayeredPlayer {
         return track;
       }),
     );
-    if (token !== this.loadToken || ctx !== this.ctx) return false;
-    for (const t of loaded) t.gain.connect(this.master);
+    if (token !== this.loadToken || this.disposed) return false;
     this.tracks = loaded;
     this.loopEnd = this.duration;
-    this.applyGains();
-    return true;
+    await this.renderNow();
+    return token === this.loadToken && !this.disposed;
   }
 
   /** Length of the shared, onset-aligned timeline. */
@@ -147,16 +174,8 @@ export class LayeredPlayer {
   }
 
   getPosition(): number {
-    if (!this.playing) return this.pausedPos;
-    const raw = this.startPos +
-      (this.ctx.currentTime - this.startCtxTime) * this.rate;
-    if (this.loopOn) {
-      const len = this.loopEnd - this.loopStart;
-      if (len > 0 && raw >= this.loopEnd) {
-        return this.loopStart + ((raw - this.loopStart) % len);
-      }
-    }
-    return Math.min(raw, this.duration);
+    if (!this.playing || this.swapping) return this.pausedPos;
+    return Math.min(this.mixStart + this.el.currentTime, this.duration);
   }
 
   getTrackStates(): TrackState[] {
@@ -172,39 +191,50 @@ export class LayeredPlayer {
   }
 
   /**
-   * Unlock audio output. Must be started synchronously inside a user gesture
-   * on mobile Safari; `play()` does this itself, but callers that load audio
-   * after the gesture should call it first.
+   * Allow later, gesture-less playback (e.g. auto-advancing a playlist). Must
+   * be called synchronously inside a user gesture on mobile Safari: a media
+   * element that has been played once from a tap may play freely afterwards.
    */
   async unlock(): Promise<void> {
-    // Must run before any await, or iOS refuses to start the media element
-    // that moves us off the ringer-switch channel.
-    requestPlaybackAudioSession();
-    if (isIOSLike()) this.mediaSessionKeepAlive.start();
-    if (isIOSLike() && !this.rebuiltContextForMobile) {
-      await this.rebuildContextForMobileGesture();
-    }
-    if (this.ctx.state === "suspended") {
-      this.primeOutputForMobileSafari();
-      void this.ctx.resume();
-    }
+    if (this.playing) return;
+    const el = this.el;
+    if (!el.getAttribute("src")) el.src = silentUrl();
+    el.muted = true;
+    const played = el.play();
+    el.pause();
+    el.muted = false;
+    played?.catch(() => {
+      // The pause above aborts it; the gesture has still been granted.
+    });
   }
 
   async play(): Promise<void> {
     if (this.playing) return;
-    await this.unlock();
-    if (this.playing || this.tracks.length === 0) return;
+    if (this.tracks.length === 0) {
+      await this.unlock();
+      return;
+    }
     let from = this.pausedPos;
     if (from >= this.duration - 0.02) from = this.loopOn ? this.loopStart : 0;
-    this.startSources(from);
+    this.moveTo(from);
+    this.playing = true;
+    // Synchronous so the tap that called us still counts as the gesture.
+    const played = this.el.play();
+    try {
+      await played;
+    } catch (err) {
+      // A newer src (mix swap) aborts it; the swap resumes playback itself.
+      if ((err as { name?: string })?.name === "NotAllowedError") {
+        this.playing = false;
+      }
+    }
   }
 
   pause(): void {
     if (!this.playing) return;
     this.pausedPos = this.getPosition();
-    this.stopSources();
     this.playing = false;
-    this.mediaSessionKeepAlive.stop();
+    this.el.pause();
   }
 
   async toggle(): Promise<void> {
@@ -213,18 +243,15 @@ export class LayeredPlayer {
   }
 
   seek(pos: number): void {
-    const clamped = Math.max(0, Math.min(pos, this.duration));
-    if (this.playing) {
-      this.stopSources();
-      this.startSources(clamped);
-    } else {
-      this.pausedPos = clamped;
-    }
+    this.moveTo(Math.max(0, Math.min(pos, this.duration)));
   }
 
   setLoopEnabled(on: boolean): void {
+    if (on === this.loopOn) return;
+    const pos = this.getPosition();
     this.loopOn = on;
-    this.restartIfPlaying();
+    this.pausedPos = pos;
+    this.rerangeMix();
   }
 
   setLoopRegion(start: number, end: number): void {
@@ -233,7 +260,7 @@ export class LayeredPlayer {
       this.loopStart + 0.05,
       Math.min(end, this.duration),
     );
-    this.restartIfPlaying();
+    if (this.loopOn) this.rerangeMix();
   }
 
   getLoop(): { on: boolean; start: number; end: number } {
@@ -241,63 +268,62 @@ export class LayeredPlayer {
   }
 
   setPlaybackRate(rate: number): void {
-    const pos = this.getPosition();
     this.rate = rate;
-    if (this.playing) {
-      this.stopSources();
-      this.startSources(pos);
-    }
+    this.el.defaultPlaybackRate = rate;
+    this.el.playbackRate = rate;
   }
 
   setMasterVolume(v: number): void {
     this.masterVolume = Math.max(0, Math.min(1, v));
-    this.applyGains();
+    this.scheduleRender();
   }
 
   setVolume(id: string, v: number): void {
     const t = this.track(id);
     if (!t) return;
     t.volume = v;
-    this.applyGains();
+    this.scheduleRender();
   }
 
   setMuted(id: string, muted: boolean): void {
     const t = this.track(id);
     if (!t) return;
     t.muted = muted;
-    this.applyGains();
+    this.scheduleRender();
   }
 
   toggleSolo(id: string): void {
     const t = this.track(id);
     if (!t) return;
     t.soloed = !t.soloed;
-    this.applyGains();
+    this.scheduleRender();
   }
 
   clearSolo(): void {
     for (const t of this.tracks) t.soloed = false;
-    this.applyGains();
+    this.scheduleRender();
   }
 
   /** Adjust a track's alignment by `deltaSeconds` relative to its detected onset. */
   setOnsetDelta(id: string, deltaSeconds: number): void {
     const t = this.track(id);
     if (!t) return;
-    const pos = this.getPosition();
     t.onset = Math.max(0, t.detectedOnset + deltaSeconds);
     this.loopEnd = Math.min(this.loopEnd, this.duration);
-    if (this.playing) {
-      this.stopSources();
-      this.startSources(pos);
-    }
+    this.scheduleRender();
   }
 
   dispose(): void {
-    this.ctx.onstatechange = null;
-    this.stopSources();
-    this.mediaSessionKeepAlive.dispose();
-    void this.ctx.close();
+    this.disposed = true;
+    this.cancelScheduledRender();
+    this.renderToken++;
+    this.playing = false;
+    const el = this.el;
+    el.pause();
+    el.removeAttribute("src");
+    el.load();
+    if (this.mixUrl) URL.revokeObjectURL(this.mixUrl);
+    this.mixUrl = null;
   }
 
   // --- internals ---
@@ -306,230 +332,153 @@ export class LayeredPlayer {
     return this.tracks.find((t) => t.id === id);
   }
 
-  private applyGains(): void {
+  /** Per-track gains, including the shared headroom and master volume. */
+  private mixGains(): number[] {
     const anySolo = this.tracks.some((t) => t.soloed);
     let summedPeaks = 0;
-    for (const t of this.tracks) {
+    const gains = this.tracks.map((t) => {
       const audible = anySolo ? t.soloed : !t.muted;
-      t.gain.gain.value = audible ? t.volume : 0;
-      if (audible) summedPeaks += t.peak * t.volume;
-    }
+      const gain = audible ? t.volume : 0;
+      summedPeaks += t.peak * gain;
+      return gain;
+    });
     // Aligned piano/vocal attacks can sum above full scale. Reserve headroom
     // without changing timing or compressing the recordings; solo stays full.
-    this.master.gain.value = this.masterVolume *
+    const master = this.masterVolume *
       Math.min(1, .95 / Math.max(.95, summedPeaks));
+    return gains.map((g) => g * master);
   }
 
-  private restartIfPlaying(): void {
-    if (!this.playing) return;
-    const pos = this.getPosition();
-    this.stopSources();
-    this.startSources(pos);
+  /** Position the playhead, keeping it inside the loop while looping. */
+  private moveTo(pos: number): void {
+    if (this.loopOn && (pos < this.loopStart || pos >= this.loopEnd)) {
+      pos = this.loopStart;
+    }
+    this.pausedPos = pos;
+    if (!this.swapping) this.el.currentTime = Math.max(0, pos - this.mixStart);
   }
 
   /**
-   * Connecting or disconnecting Bluetooth headphones mid-song reroutes the
-   * output, and iOS suspends ("interrupted") the context while it does. Resume
-   * so the song continues on the new route instead of stalling.
+   * The loop changed which stretch of the timeline the mix covers, so the
+   * element's clock no longer maps to it: swap immediately (the swap starts
+   * synchronously) so a seek right after lands on the new mix.
    */
-  private watchContextState(): void {
-    const ctx = this.ctx;
-    ctx.onstatechange = () => {
-      if (ctx !== this.ctx || !this.playing) return;
-      if (ctx.state !== "running" && ctx.state !== "closed") {
-        ctx.resume().catch(() => {
-          // Needs a user gesture on this browser; the next tap resumes it.
-        });
-      }
-    };
+  private rerangeMix(): void {
+    if (this.tracks.length === 0 || this.disposed) return;
+    void this.renderNow().catch(() => undefined);
   }
 
-  private primeOutputForMobileSafari(): void {
-    const buffer = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
-    const src = this.ctx.createBufferSource();
-    src.buffer = buffer;
-    src.connect(this.master);
-    try {
-      src.start(0);
-    } catch {
-      // Older mobile Safari builds can throw if the context was already unlocked.
-    }
+  private scheduleRender(): void {
+    if (this.tracks.length === 0 || this.disposed) return;
+    this.cancelScheduledRender();
+    this.renderTimer = setTimeout(() => {
+      this.renderTimer = null;
+      void this.renderNow().catch(() => undefined);
+    }, RENDER_DELAY_MS);
   }
 
-  private async rebuildContextForMobileGesture(): Promise<void> {
-    this.rebuiltContextForMobile = true;
-    const oldCtx = this.ctx;
-    oldCtx.onstatechange = null;
-    this.ctx = createPlaybackContext();
-    this.master = this.ctx.createGain();
-    this.master.connect(this.ctx.destination);
-    this.watchContextState();
-    this.primeOutputForMobileSafari();
-    void this.ctx.resume();
+  private cancelScheduledRender(): void {
+    if (this.renderTimer !== null) clearTimeout(this.renderTimer);
+    this.renderTimer = null;
+  }
 
-    this.tracks = await Promise.all(
-      this.tracks.map(async (track) => {
-        const buffer = await this.ctx.decodeAudioData(track.bytes.slice(0));
-        const gain = this.ctx.createGain();
-        gain.connect(this.master);
-        return { ...track, buffer, gain, source: null };
-      }),
+  /** Mix the current settings and swap the result in at the playhead. */
+  private async renderNow(): Promise<void> {
+    this.cancelScheduledRender();
+    const token = ++this.renderToken;
+    const pos = this.getPosition();
+    const start = this.loopOn ? this.loopStart : 0;
+    const end = this.loopOn ? this.loopEnd : this.duration;
+    const wav = mixToWav(
+      this.tracks,
+      this.mixGains(),
+      start,
+      end,
+      this.loopOn ? LOOP_FADE_SECONDS : 0,
     );
-    this.applyGains();
-    void oldCtx.close();
-  }
+    const url = URL.createObjectURL(wav);
 
-  private startSources(from: number): void {
-    const now = this.ctx.currentTime;
-    this.startCtxTime = now;
-    this.startPos = from;
-    this.pausedPos = from;
-    this.playing = true;
-
-    for (const t of this.tracks) {
-      const src = this.ctx.createBufferSource();
-      src.buffer = t.buffer;
-      src.playbackRate.value = this.rate;
-      src.connect(t.gain);
-
-      if (this.loopOn) {
-        src.loop = true;
-        src.loopStart = t.onset + this.loopStart;
-        src.loopEnd = t.onset + this.loopEnd;
-      }
-
-      const bufferStart = t.onset + from;
-      if (bufferStart < t.buffer.duration) {
-        src.start(now, Math.max(0, bufferStart));
-        t.source = src;
-        if (!this.loopOn) {
-          src.onended = () => {
-            if (t.source === src) t.source = null;
-            if (this.playing && this.tracks.every((x) => x.source === null)) {
-              this.handleNaturalEnd();
-            }
-          };
-        }
-      } else {
-        t.source = null;
-      }
+    const el = this.el;
+    this.pausedPos = pos;
+    this.swapping = true;
+    el.loop = this.loopOn;
+    el.src = url;
+    try {
+      await whenLoaded(el);
+    } catch (err) {
+      URL.revokeObjectURL(url);
+      if (token === this.renderToken) this.swapping = false;
+      throw err;
+    }
+    if (token !== this.renderToken) {
+      URL.revokeObjectURL(url);
+      return;
+    }
+    if (this.mixUrl) URL.revokeObjectURL(this.mixUrl);
+    this.mixUrl = url;
+    this.mixStart = start;
+    this.swapping = false;
+    el.defaultPlaybackRate = this.rate;
+    el.playbackRate = this.rate;
+    this.moveTo(this.pausedPos);
+    if (this.playing) {
+      el.play()?.catch(() => {
+        // Superseded by a newer swap, or the OS refused; state stays correct.
+      });
     }
   }
 
   private handleNaturalEnd(): void {
-    if (!this.playing) return;
+    if (!this.playing || this.swapping || this.loopOn) return;
     this.playing = false;
     this.pausedPos = this.duration;
-    this.stopSources();
-    this.mediaSessionKeepAlive.stop();
     this.onEnded?.();
   }
-
-  private stopSources(): void {
-    for (const t of this.tracks) {
-      if (t.source) {
-        t.source.onended = null;
-        try {
-          t.source.stop();
-        } catch {
-          /* already stopped */
-        }
-        t.source.disconnect();
-        t.source = null;
-      }
-    }
-  }
 }
 
 /**
- * The default "interactive" latency hint asks for the smallest output buffer
- * the device allows. That is fragile over Bluetooth, whose link delivers audio
- * in bursts: any hiccup drains the buffer and the headphones click or stutter.
- * Nothing here needs low latency (it is not an instrument), so ask for the
- * larger, power-friendly "playback" buffer instead.
+ * Sum the tracks over the timeline range [from, to) into a 16-bit stereo WAV.
+ * All buffers share one sample rate (they come from the same decoder).
  */
-function createPlaybackContext(): AudioContext {
-  const Ctx = window.AudioContext ||
-    (window as unknown as { webkitAudioContext: typeof AudioContext })
-      .webkitAudioContext;
-  try {
-    return new Ctx({ latencyHint: "playback" });
-  } catch {
-    // Older WebKit builds reject constructor options.
-    return new Ctx();
+function mixToWav(
+  tracks: Track[],
+  gains: number[],
+  from: number,
+  to: number,
+  edgeFade: number,
+): Blob {
+  const sampleRate = tracks[0]?.buffer.sampleRate ?? MIX_SAMPLE_RATE;
+  const frames = Math.max(1, Math.round((to - from) * sampleRate));
+  const left = new Float32Array(frames);
+  const right = new Float32Array(frames);
+  tracks.forEach((t, i) => {
+    const gain = gains[i];
+    if (!(gain > 0)) return;
+    const offset = Math.round((t.onset + from) * sampleRate);
+    const n = Math.min(frames, t.buffer.length - offset);
+    if (n <= 0) return;
+    const l = t.buffer.getChannelData(0);
+    const r = t.buffer.numberOfChannels > 1 ? t.buffer.getChannelData(1) : l;
+    for (let s = 0; s < n; s++) {
+      left[s] += l[offset + s] * gain;
+      right[s] += r[offset + s] * gain;
+    }
+  });
+  const fade = Math.min(Math.floor(edgeFade * sampleRate), frames >> 1);
+  for (let s = 0; s < fade; s++) {
+    const g = s / fade;
+    left[s] *= g;
+    right[s] *= g;
+    left[frames - 1 - s] *= g;
+    right[frames - 1 - s] *= g;
   }
+  return encodeWav([left, right], sampleRate);
 }
 
-/**
- * iOS routes Web Audio through the "ambient" audio session, which obeys the
- * ring/silent switch; <audio>/<video> use "playback", which does not. Safari
- * 17+ lets pages opt Web Audio into "playback" directly.
- */
-function requestPlaybackAudioSession(): void {
-  const session = (
-    window.navigator as { audioSession?: { type: string } } | undefined
-  )?.audioSession;
-  if (!session || session.type === "playback") return;
-  try {
-    session.type = "playback";
-  } catch {
-    // Unsupported session type on this build; the keep-alive fallback covers it.
-  }
-}
-
-/**
- * Older iOS versions have no audioSession API. There, keeping an
- * HTMLMediaElement playing promotes the whole page to the "playback" session,
- * so Web Audio output also ignores the silent switch while it runs.
- */
-class SilentMediaKeepAlive {
-  private el: HTMLAudioElement | null = null;
-  private url: string | null = null;
-
-  start(): void {
-    const doc = window.document;
-    if (!doc) return;
-    if (!this.el) {
-      this.url = URL.createObjectURL(silentWav());
-      const el = doc.createElement("audio");
-      el.src = this.url;
-      el.loop = true;
-      el.preload = "auto";
-      el.setAttribute("playsinline", "");
-      el.setAttribute("x-webkit-airplay", "deny");
-      el.disableRemotePlayback = true;
-      this.el = el;
-    }
-    const played = this.el.play();
-    played?.catch(() => {
-      // Autoplay rejected outside a gesture; the next tap retries.
-    });
-  }
-
-  stop(): void {
-    this.el?.pause();
-  }
-
-  dispose(): void {
-    if (this.el) {
-      this.el.pause();
-      this.el.removeAttribute("src");
-      this.el.load();
-      this.el = null;
-    }
-    if (this.url) {
-      URL.revokeObjectURL(this.url);
-      this.url = null;
-    }
-  }
-}
-
-function silentWav(): Blob {
-  // Long enough that the element rarely loops: each loop restart briefly
-  // re-negotiates the media pipeline, which can glitch Bluetooth output.
-  const sampleRate = 44100;
-  const samples = Math.floor(sampleRate * 10);
-  const dataBytes = samples * 2;
+function encodeWav(channels: Float32Array[], sampleRate: number): Blob {
+  const count = channels.length;
+  const frames = channels[0].length;
+  const dataBytes = frames * count * 2;
   const view = new DataView(new ArrayBuffer(44 + dataBytes));
   const ascii = (offset: number, s: string) => {
     for (let i = 0; i < s.length; i++) {
@@ -542,29 +491,83 @@ function silentWav(): Blob {
   ascii(12, "fmt ");
   view.setUint32(16, 16, true);
   view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
+  view.setUint16(22, count, true);
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
+  view.setUint32(28, sampleRate * count * 2, true);
+  view.setUint16(32, count * 2, true);
   view.setUint16(34, 16, true);
   ascii(36, "data");
   view.setUint32(40, dataBytes, true);
+  // Typed-array writes are several times faster than DataView per sample.
+  // WAV is little-endian, as is every platform this runs on.
+  const pcm = new Int16Array(view.buffer, 44, frames * count);
+  for (let c = 0; c < count; c++) {
+    const data = channels[c];
+    for (let s = 0, i = c; s < frames; s++, i += count) {
+      const v = data[s];
+      pcm[i] = v >= 1 ? 0x7fff : v <= -1 ? -0x8000 : v * 0x7fff;
+    }
+  }
   return new Blob([view.buffer], { type: "audio/wav" });
+}
+
+let silentWavUrl: string | null = null;
+
+/** A short silent clip to give the element a source before a mix exists. */
+function silentUrl(): string {
+  silentWavUrl ??= URL.createObjectURL(
+    encodeWav([new Float32Array(MIX_SAMPLE_RATE / 10)], MIX_SAMPLE_RATE),
+  );
+  return silentWavUrl;
+}
+
+function whenLoaded(el: HTMLAudioElement): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const done = () => {
+      el.removeEventListener("loadedmetadata", done);
+      el.removeEventListener("error", failed);
+      resolve();
+    };
+    const failed = () => {
+      el.removeEventListener("loadedmetadata", done);
+      el.removeEventListener("error", failed);
+      reject(new Error("Could not play the mixed audio"));
+    };
+    el.addEventListener("loadedmetadata", done);
+    el.addEventListener("error", failed);
+  });
+}
+
+/** Rate changes speed up / slow down the recording, pitch included. */
+function setPreservesPitch(el: HTMLAudioElement, on: boolean): void {
+  const media = el as HTMLAudioElement & {
+    preservesPitch?: boolean;
+    webkitPreservesPitch?: boolean;
+  };
+  media.preservesPitch = on;
+  media.webkitPreservesPitch = on;
+}
+
+/** Decoding only: this context never produces sound. */
+function createDecoder(): BaseAudioContext {
+  const Ctx = window.OfflineAudioContext ||
+    (window as unknown as { webkitOfflineAudioContext: typeof OfflineAudioContext })
+      .webkitOfflineAudioContext;
+  return new Ctx(2, MIX_SAMPLE_RATE, MIX_SAMPLE_RATE);
+}
+
+function decode(ctx: BaseAudioContext, bytes: ArrayBuffer): Promise<AudioBuffer> {
+  // Older WebKit only supports the callback form.
+  return new Promise((resolve, reject) => {
+    const result = ctx.decodeAudioData(bytes, resolve, reject);
+    result?.then(resolve, reject);
+  });
 }
 
 async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
   return res.arrayBuffer();
-}
-
-function isIOSLike(): boolean {
-  const nav = window.navigator;
-  if (!nav) return false;
-  return (
-    /iPad|iPhone|iPod/.test(nav.userAgent) ||
-    (nav.platform === "MacIntel" && nav.maxTouchPoints > 1)
-  );
 }
 
 /**
