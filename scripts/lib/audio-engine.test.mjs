@@ -121,7 +121,8 @@ test("shared start time, authored zero point, clean trio mix and full-level solo
     destination = {};
     gains = [];
     sources = [];
-    constructor() {
+    constructor(options) {
+      this.options = options;
       context = this;
     }
     createGain() {
@@ -159,6 +160,11 @@ test("shared start time, authored zero point, clean trio mix and full-level solo
   });
   try {
     const player = new LayeredPlayer();
+    assert.equal(
+      context.options?.latencyHint,
+      "playback",
+      "large output buffer so Bluetooth output does not underrun",
+    );
     await player.load(
       ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
     );

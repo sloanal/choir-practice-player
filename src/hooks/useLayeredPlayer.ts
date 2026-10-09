@@ -5,6 +5,9 @@ import {
   type TrackState,
 } from "../audio/engine";
 
+/** How often the position readout refreshes while playing. */
+const CLOCK_INTERVAL_MS = 66;
+
 interface LoopState {
   on: boolean;
   start: number;
@@ -85,9 +88,12 @@ export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
   // Position clock
   useEffect(() => {
     let raf = 0;
-    const tick = () => {
+    let last = -Infinity;
+    const tick = (now: number) => {
       const engine = engineRef.current;
-      if (engine) {
+      // ~15 fps is smooth for a scrubber and leaves the phone's CPU to audio.
+      if (engine && now - last >= CLOCK_INTERVAL_MS) {
+        last = now;
         setPosition(engine.getPosition());
         setPlaying(engine.isPlaying);
       }
