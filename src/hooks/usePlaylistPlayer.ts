@@ -9,6 +9,9 @@ export type MixMode = "all" | "mine";
 /** Pressing "previous" after this many seconds restarts the current song. */
 const RESTART_THRESHOLD = 3;
 
+/** How often the position readout refreshes while playing. */
+const CLOCK_INTERVAL_MS = 66;
+
 export interface PlaylistController {
   started: boolean;
   status: "idle" | "loading" | "ready" | "error";
@@ -327,9 +330,12 @@ export function usePlaylistPlayer(
   useEffect(() => {
     if (!started) return;
     let raf = 0;
-    const tick = () => {
+    let last = -Infinity;
+    const tick = (now: number) => {
       const engine = engineRef.current;
-      if (engine) {
+      // ~15 fps is smooth for a scrubber and leaves the phone's CPU to audio.
+      if (engine && now - last >= CLOCK_INTERVAL_MS) {
+        last = now;
         setPosition(engine.getPosition());
         setEnginePlaying(engine.isPlaying);
       }

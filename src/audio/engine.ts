@@ -67,12 +67,10 @@ export class LayeredPlayer {
 
   constructor() {
     requestPlaybackAudioSession();
-    const Ctx = window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    this.ctx = new Ctx();
+    this.ctx = createPlaybackContext();
     this.master = this.ctx.createGain();
     this.master.connect(this.ctx.destination);
+    this.watchContextState();
   }
 
   /**
@@ -296,6 +294,7 @@ export class LayeredPlayer {
   }
 
   dispose(): void {
+    this.ctx.onstatechange = null;
     this.stopSources();
     this.mediaSessionKeepAlive.dispose();
     void this.ctx.close();
@@ -328,6 +327,23 @@ export class LayeredPlayer {
     this.startSources(pos);
   }
 
+  /**
+   * Connecting or disconnecting Bluetooth headphones mid-song reroutes the
+   * output, and iOS suspends ("interrupted") the context while it does. Resume
+   * so the song continues on the new route instead of stalling.
+   */
+  private watchContextState(): void {
+    const ctx = this.ctx;
+    ctx.onstatechange = () => {
+      if (ctx !== this.ctx || !this.playing) return;
+      if (ctx.state !== "running" && ctx.state !== "closed") {
+        ctx.resume().catch(() => {
+          // Needs a user gesture on this browser; the next tap resumes it.
+        });
+      }
+    };
+  }
+
   private primeOutputForMobileSafari(): void {
     const buffer = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
     const src = this.ctx.createBufferSource();
@@ -343,12 +359,11 @@ export class LayeredPlayer {
   private async rebuildContextForMobileGesture(): Promise<void> {
     this.rebuiltContextForMobile = true;
     const oldCtx = this.ctx;
-    const Ctx = window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    this.ctx = new Ctx();
+    oldCtx.onstatechange = null;
+    this.ctx = createPlaybackContext();
     this.master = this.ctx.createGain();
     this.master.connect(this.ctx.destination);
+    this.watchContextState();
     this.primeOutputForMobileSafari();
     void this.ctx.resume();
 
@@ -427,6 +442,25 @@ export class LayeredPlayer {
 }
 
 /**
+ * The default "interactive" latency hint asks for the smallest output buffer
+ * the device allows. That is fragile over Bluetooth, whose link delivers audio
+ * in bursts: any hiccup drains the buffer and the headphones click or stutter.
+ * Nothing here needs low latency (it is not an instrument), so ask for the
+ * larger, power-friendly "playback" buffer instead.
+ */
+function createPlaybackContext(): AudioContext {
+  const Ctx = window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext })
+      .webkitAudioContext;
+  try {
+    return new Ctx({ latencyHint: "playback" });
+  } catch {
+    // Older WebKit builds reject constructor options.
+    return new Ctx();
+  }
+}
+
+/**
  * iOS routes Web Audio through the "ambient" audio session, which obeys the
  * ring/silent switch; <audio>/<video> use "playback", which does not. Safari
  * 17+ lets pages opt Web Audio into "playback" directly.
@@ -491,8 +525,10 @@ class SilentMediaKeepAlive {
 }
 
 function silentWav(): Blob {
+  // Long enough that the element rarely loops: each loop restart briefly
+  // re-negotiates the media pipeline, which can glitch Bluetooth output.
   const sampleRate = 44100;
-  const samples = Math.floor(sampleRate * 0.5);
+  const samples = Math.floor(sampleRate * 10);
   const dataBytes = samples * 2;
   const view = new DataView(new ArrayBuffer(44 + dataBytes));
   const ascii = (offset: number, s: string) => {
