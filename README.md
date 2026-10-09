@@ -27,9 +27,15 @@ Dropbox shared folder  ──(local sync/import)──────────�
   recordings are preserved, and fingerprinted filenames prevent stale audio.
   There's still a **Show alignment fine‑tune** control to nudge any part by
   ±20 ms while rehearsing.
-- **Playback**: the singing player uses the Web Audio API for tight sync and
-  independent per‑part gain. Peak-aware mix headroom prevents the three aligned
-  parts from clipping together; solo playback keeps its normal level.
+- **Playback**: the singing player decodes the three parts and mixes them
+  sample‑accurately into one WAV in the browser, which plays through a single
+  `<audio>` element. Going through the platform's media pipeline (rather than
+  live Web Audio output) keeps playback smooth over Bluetooth receivers such as
+  car stereos and lets it continue with the screen locked. Changing a part's
+  volume, mute/solo, alignment or the loop re-renders the mix (well under a
+  second) and swaps it in at the current position. Peak-aware mix headroom
+  prevents the three aligned parts from clipping together; solo playback keeps
+  its normal level.
   Because all audio is served same‑origin (baked into
   the deployed site), there are no CORS issues.
 
@@ -178,7 +184,7 @@ Per-part recordings also serve as training for a song that has none.
 
 ```
 src/
-  audio/engine.ts          Web Audio multi-track engine (sync, gain, loop, seek)
+  audio/engine.ts          multi-track engine: decode, mix to one stream, loop, seek
   components/              SongList, SongChooser, TrainingPlayer, SingingPlayer, SimpleAudioPlayer
   hooks/                   manifest loading, hash routing, layered-player controller, "my part"
 scripts/
