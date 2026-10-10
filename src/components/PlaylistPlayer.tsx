@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PlayIcon } from "./PlayIcon";
 import { PART_SHORT, type PartId, type Song } from "../types";
 import { type RepeatMode, usePlaylistPlayer } from "../hooks/usePlaylistPlayer";
 import { formatTime } from "../lib/format";
@@ -90,7 +91,7 @@ export function PlaylistPlayer(
           onClick={pl.toggle}
           aria-label={pl.playing ? "Pause" : "Play"}
         >
-          {pl.playing ? "❚❚" : "►"}
+          {pl.playing ? "❚❚" : <PlayIcon />}
         </button>
         <button
           className="skip-btn"
