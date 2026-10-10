@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PlayIcon } from "./PlayIcon";
-import { formatTime } from "../lib/format";
+import { BackTenButton, Scrubber } from "./Scrubber";
 
 const RATES = [0.75, 0.9, 1, 1.1, 1.25];
 
@@ -31,11 +31,11 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
     else el.pause();
   };
 
-  const restart = () => {
+  const seek = (pos: number) => {
     const el = audioRef.current;
     if (!el) return;
-    el.currentTime = 0;
-    setPosition(0);
+    el.currentTime = pos;
+    setPosition(pos);
   };
 
   return (
@@ -68,30 +68,14 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
         </button>
         <button
           className="restart-btn"
-          onClick={restart}
+          onClick={() => seek(0)}
           aria-label="Restart from beginning"
           title="Restart from beginning"
         >
           ⏮
         </button>
-        <div className="scrub">
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step={0.01}
-            value={Math.min(position, duration || 0)}
-            onChange={(e) => {
-              const el = audioRef.current;
-              if (el) el.currentTime = Number(e.target.value);
-              setPosition(Number(e.target.value));
-            }}
-          />
-          <div className="times">
-            <span>{formatTime(position)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-        </div>
+        <BackTenButton onClick={() => seek(Math.max(0, position - 10))} />
+        <Scrubber value={position} duration={duration} onSeek={seek} />
       </div>
 
       <div className="controls-row">

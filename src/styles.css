@@ -639,42 +639,93 @@ code {
   transform: scale(0.96);
 }
 
+.restart-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.back10-btn {
+  font-size: 0;
+}
+
 .scrub {
   flex: 1;
 }
 
-.scrub-track {
+/* Touch-first seek bar: a tall invisible hit area around a slim rail. */
+.scrubber {
   position: relative;
-  height: 26px;
+  height: 36px;
   display: flex;
   align-items: center;
+  cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
-.scrub-track input[type="range"] {
+.scrubber[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.scrubber-rail {
   position: relative;
   width: 100%;
-  margin: 0;
-  background: transparent;
-  z-index: 2;
-}
-
-.scrub-fill {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
   height: 6px;
   border-radius: 999px;
+  background: var(--bg-elev2);
+  overflow: hidden;
+  transition: height 0.15s ease;
+  pointer-events: none;
+}
+
+.scrubber-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
   background: var(--accent);
   pointer-events: none;
-  z-index: 1;
+}
+
+.scrubber-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  transform: translateY(-50%);
+  transition: transform 0.15s ease;
+  pointer-events: none;
+}
+
+.scrubber-active .scrubber-rail {
+  height: 10px;
+}
+
+.scrubber-active .scrubber-thumb {
+  transform: translateY(-50%) scale(1.4);
+}
+
+.scrubber:focus-visible .scrubber-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.times-active {
+  color: var(--text);
 }
 
 .loop-region {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 12px;
+  top: 0;
+  bottom: 0;
   background: color-mix(in srgb, var(--solo) 35%, transparent);
   border-radius: 4px;
   pointer-events: none;
@@ -696,10 +747,6 @@ input[type="range"] {
   border-radius: 999px;
   background: var(--bg-elev2);
   cursor: pointer;
-}
-
-.scrub-track input[type="range"]::-webkit-slider-runnable-track {
-  background: transparent;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -843,11 +890,13 @@ input[type="range"]::-moz-range-thumb {
   .song-heading {
     font-size: 22px;
   }
-  .playlist-transport {
+  .transport {
     flex-wrap: wrap;
     justify-content: center;
+    row-gap: 6px;
   }
-  .playlist-transport .scrub {
+  .transport .scrub {
+    order: -1;
     flex-basis: 100%;
     margin-left: 0;
   }
