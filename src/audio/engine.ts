@@ -56,8 +56,13 @@ const MIX_SAMPLE_RATE = 44100;
 /** Lets a volume-slider drag settle before re-rendering the mix. */
 const SLIDER_RENDER_DELAY_MS = 120;
 /** How closely the incoming mix must match the outgoing one at handover. */
-const SYNC_TOLERANCE_SECONDS = 0.012;
-const SYNC_ATTEMPTS = 3;
+const SYNC_TOLERANCE_SECONDS = 0.01;
+/** Give up waiting for the incoming mix to start (it then cuts over). */
+const STARTUP_TIMEOUT_MS = 2000;
+/** Stop fine-tuning and switch anyway, close enough, after this long. */
+const CONVERGE_TIMEOUT_MS = 1500;
+/** Time over which a speed tweak closes the offset. */
+const CONVERGE_SECONDS = 0.2;
 /** Fade at loop edges so the wrap-around does not click. */
 const LOOP_FADE_SECONDS = 0.005;
 
@@ -94,6 +99,10 @@ export class LayeredPlayer {
   private rendering = false;
   private pendingSeek: number | null = null;
   private disposed = false;
+  /** Learned delay between play() and sound actually flowing, in seconds. */
+  private startupLead = 0.05;
+  /** Recent mix handovers, for the ?debug readout. */
+  readonly handovers: string[] = [];
 
   onEnded: (() => void) | null = null;
 
@@ -495,9 +504,15 @@ export class LayeredPlayer {
   }
 
   /**
-   * Start `next` (muted) at the playhead and correct it until it runs in step
-   * with the active element. Resolves whether it is in step; a jump (the loop
-   * moved the playhead) needs no matching.
+   * Start `next` (muted) at the playhead and bring it into step with the
+   * active element. Resolves true once `next` is audibly running (in step, or
+   * as close as it got), false if it never started; a jump (the loop or a
+   * seek moved the playhead) needs no matching.
+   *
+   * iOS reports "playing" a moment before sound actually flows, so we wait
+   * for the clock to move, and correct any offset by briefly speeding up or
+   * slowing down the muted element rather than seeking, which would restart
+   * that startup delay.
    */
   private async startInStep(
     next: HTMLAudioElement,
@@ -512,36 +527,60 @@ export class LayeredPlayer {
       if (loop && len > 0) d = ((d % len) + len * 1.5) % len - len / 2;
       return d;
     };
+    const alive = () => !stale() && this.playing;
     // A seek while this mix loaded moves the playhead: start there instead.
     const seek = this.pendingSeek;
     const pos = seek ?? this.getPosition();
     const jump = seek !== null || pos < start || pos >= end;
-    // Startup and seek latency, measured and compensated as we go.
-    let lead = 0;
-    const target = seek ?? (jump ? start : pos);
-    next.currentTime = mixTime(target, start, end, loop);
+    const target = seek ??
+      (jump ? start : pos + this.startupLead * this.rate);
+    const t0 = mixTime(target, start, end, loop);
+    next.currentTime = t0;
+    const begun = now();
     try {
       await next.play();
     } catch {
       return false;
     }
+    const running = await pollUntil(
+      () => !alive() || Math.abs(next.currentTime - t0) > 0.02,
+      STARTUP_TIMEOUT_MS,
+    );
+    if (!running || !alive()) return false;
+    const startup = (now() - begun) / 1000;
+
     if (jump) {
       // Recheck: another seek may have arrived while it started.
       if (this.pendingSeek !== null && this.pendingSeek !== target) {
         next.currentTime = mixTime(this.pendingSeek, start, end, loop);
       }
+      this.logHandover(`jump, started in ${ms(startup)}`);
       return true;
     }
-    for (let attempt = 0; attempt < SYNC_ATTEMPTS; attempt++) {
-      if (stale() || !this.playing) return false;
-      const d = drift();
-      if (Math.abs(d) <= SYNC_TOLERANCE_SECONDS) return true;
-      lead += d;
-      next.currentTime = mixTime(this.getPosition() + lead, start, end, loop);
-      await whenEvent(next, "seeked");
+
+    // How far our head start missed by: learn it for next time.
+    const initial = drift();
+    this.startupLead = Math.max(0, Math.min(.5, this.startupLead + initial));
+    const deadline = now() + CONVERGE_TIMEOUT_MS;
+    let d = initial;
+    while (alive() && Math.abs(d) > SYNC_TOLERANCE_SECONDS && now() < deadline) {
+      // Close the gap over ~0.2 s; muted, so the pitch change is unheard.
+      next.playbackRate = this.rate *
+        Math.max(.5, Math.min(2, 1 + d / CONVERGE_SECONDS));
+      await sleep(15);
+      d = drift();
     }
-    // Close enough; a few milliseconds beats stalling the change.
-    return !stale() && this.playing && Math.abs(drift()) < 0.25;
+    next.playbackRate = this.rate;
+    this.logHandover(
+      `started in ${ms(startup)}, off by ${ms(initial)}, ` +
+        `switched ${ms(d)} apart`,
+    );
+    return alive();
+  }
+
+  private logHandover(line: string): void {
+    this.handovers.push(line);
+    if (this.handovers.length > 8) this.handovers.shift();
   }
 
   private handleNaturalEnd(): void {
@@ -661,17 +700,18 @@ function prime(el: HTMLAudioElement): void {
   });
 }
 
-/** Resolves on `type`, or after a timeout so a missed event cannot hang us. */
-function whenEvent(el: HTMLAudioElement, type: string, ms = 1000): Promise<void> {
-  return new Promise((resolve) => {
-    const done = () => {
-      clearTimeout(timer);
-      el.removeEventListener(type, done);
-      resolve();
-    };
-    const timer = setTimeout(done, ms);
-    el.addEventListener(type, done);
-  });
+const now = () => performance.now();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const ms = (seconds: number) => `${Math.round(seconds * 1000)}ms`;
+
+/** Polls `done` every 10 ms; resolves false if it is still false at timeout. */
+async function pollUntil(done: () => boolean, timeoutMs: number): Promise<boolean> {
+  const deadline = now() + timeoutMs;
+  while (!done()) {
+    if (now() > deadline) return false;
+    await sleep(10);
+  }
+  return true;
 }
 
 function whenLoaded(el: HTMLAudioElement): Promise<void> {

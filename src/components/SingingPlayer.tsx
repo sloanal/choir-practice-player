@@ -6,6 +6,9 @@ import { BackButton } from "./BackButton";
 import { partsOf, singingInputs } from "../lib/songs";
 import { useLayeredPlayer } from "../hooks/useLayeredPlayer";
 
+/** Add ?debug to the page URL (before the #) to show mix-switch timings. */
+const DEBUG = new URLSearchParams(window.location.search).has("debug");
+
 const RATES = [0.75, 0.9, 1, 1.1, 1.25];
 
 export function SingingPlayer(
@@ -245,6 +248,11 @@ export function SingingPlayer(
           <button className="link-btn" onClick={() => setShowAlign((v) => !v)}>
             {showAlign ? "Hide" : "Show"} alignment fine-tune
           </button>
+          {DEBUG && (
+            <pre className="muted" style={{ whiteSpace: "pre-wrap" }}>
+              {player.handovers.join("\n") || "No mix changes yet"}
+            </pre>
+          )}
         </>
       )}
     </div>
