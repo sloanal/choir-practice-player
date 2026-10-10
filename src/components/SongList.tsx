@@ -39,18 +39,6 @@ export function SongList({ songs, general, myPart }: {
     <div className="songlist">
       <PlaylistPlayer songs={singingSongs} myPart={myPart} />
       <OfflineControls songs={songs} extras={general} scope="all" />
-      {hasBits && (
-        <button className="bits-banner" onClick={() => navigate({ name: "bits" })}>
-          <span className="bits-banner-icon">🧩</span>
-          <span>
-            <span className="bits-banner-title">Bits &amp; Bobs &amp; Structure</span>
-            <span className="bits-banner-sub">
-              Greg’s extra parts and song structure notes
-            </span>
-          </span>
-          <span className="bits-banner-arrow">→</span>
-        </button>
-      )}
       <div className="search">
         <input
           type="search"
@@ -103,6 +91,18 @@ export function SongList({ songs, general, myPart }: {
         })}
         {filtered.length === 0 && <li className="muted">No matches.</li>}
       </ul>
+      {hasBits && (
+        <button className="bits-banner" onClick={() => navigate({ name: "bits" })}>
+          <span className="bits-banner-icon">🧩</span>
+          <span>
+            <span className="bits-banner-title">Bits &amp; Bobs &amp; Structure</span>
+            <span className="bits-banner-sub">
+              Greg’s extra parts and song structure notes
+            </span>
+          </span>
+          <span className="bits-banner-arrow">→</span>
+        </button>
+      )}
     </div>
   );
 }
