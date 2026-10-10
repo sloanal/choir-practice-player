@@ -38,6 +38,8 @@ function fakeBuffer(samples, seconds = 4) {
 function installFakes(samples) {
   const media = [];
   const blobs = new Map();
+  const events = [];
+  let srcSeq = 0;
   let nextUrl = 0;
   const original = {
     window: globalThis.window,
@@ -82,6 +84,7 @@ function installFakes(samples) {
           set src(v) {
             this._src = v;
             this.attrs.src = v;
+            this.seq = ++srcSeq;
             this.paused = true;
             this.currentTime = 0;
             this.playbackRate = this.defaultPlaybackRate;
@@ -103,16 +106,19 @@ function installFakes(samples) {
           removeEventListener(type, fn) {
             listeners[type] = (listeners[type] ?? []).filter((f) => f !== fn);
           },
+          seq: 0,
           emit(type) {
             for (const fn of [...(listeners[type] ?? [])]) fn();
           },
           load() {},
           play() {
             this.plays++;
+            events.push(["play", media.indexOf(this), this.muted]);
             this.paused = false;
             return Promise.resolve();
           },
           pause() {
+            if (!this.paused) events.push(["pause", media.indexOf(this)]);
             this.paused = true;
           },
         };
@@ -127,7 +133,9 @@ function installFakes(samples) {
     URL.createObjectURL = original.create;
     URL.revokeObjectURL = original.revoke;
   };
-  return { media, blobs, restore };
+  // The element holding the newest mix is the one the player uses.
+  const active = () => media.reduce((a, b) => (b.seq > a.seq ? b : a));
+  return { media, blobs, events, active, restore };
 }
 
 /** First left-channel sample of the WAV the element is currently playing. */
@@ -139,16 +147,16 @@ async function firstSample(el, blobs) {
 const settle = () => new Promise((r) => setTimeout(r, 200));
 
 test("plays one pre-mixed stream through a media element, not Web Audio", async () => {
-  const { media, blobs, restore } = installFakes([.5]);
+  const { media, blobs, active, restore } = installFakes([.5]);
   try {
     const player = new LayeredPlayer();
-    assert.equal(media.length, 1);
+    assert.equal(media.length, 2, "current mix + the next one loading");
     assert.equal(media[0].attrs.playsinline, "");
     assert.equal(window.AudioContext, undefined, "no live AudioContext needed");
     await player.load(
       ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
     );
-    const el = media[0];
+    const el = active();
     assert.equal(blobs.get(el.src).type, "audio/wav");
     assert.ok((await blobs.get(el.src).size) > SR * 4 * 4, "whole song, stereo");
 
@@ -171,56 +179,75 @@ test("plays one pre-mixed stream through a media element, not Web Audio", async 
     el.emit("ended");
     assert.equal(ended, 1, "natural end is reported once");
     assert.equal(player.isPlaying, false);
+    const mixUrl = el.src;
     player.dispose();
-    assert.equal(el.paused, true);
-    assert.equal(blobs.size, 0, "mix URL released");
+    assert.ok(media.every((m) => m.paused));
+    assert.equal(blobs.has(mixUrl), false, "mix URL released");
   } finally {
     restore();
   }
 });
 
 test("authored zero point, clean trio mix and full-level solo", async () => {
-  const { media, blobs, restore } = installFakes([.8, -.8, .1]);
+  const { blobs, active, restore } = installFakes([.8, -.8, .1]);
   try {
     const player = new LayeredPlayer();
     await player.load(
       ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
     );
-    const el = media[0];
-    const trio = await firstSample(el, blobs);
+    const trio = await firstSample(active(), blobs);
     assert.ok(trio <= .950001 && trio > .94, `sum cannot clip (${trio})`);
 
     player.toggleSolo("mid");
     await settle();
-    const solo = await firstSample(el, blobs);
+    const solo = await firstSample(active(), blobs);
     assert.ok(Math.abs(solo - .8) < 1e-3, "isolated track retains normal level");
 
     player.setMasterVolume(.5);
     await settle();
-    assert.ok(Math.abs((await firstSample(el, blobs)) - .4) < 1e-3);
+    assert.ok(Math.abs((await firstSample(active(), blobs)) - .4) < 1e-3);
     player.dispose();
   } finally {
     restore();
   }
 });
 
-test("mix changes swap in at the current position and keep playing", async () => {
-  const { media, restore } = installFakes([.5]);
+test("mix changes hand over to a second element without a gap", async () => {
+  const { media, events, active, restore } = installFakes([.5]);
   try {
     const player = new LayeredPlayer();
     await player.load(
       ["high", "mid", "low"].map((id) => ({ id, url: id, onset: 0 })),
     );
-    const el = media[0];
+    const old = active();
     await player.play();
-    el.currentTime = 2;
-    const before = el.src;
+    old.currentTime = 2;
+    events.length = 0;
+    // "Just my part": two calls, one render.
+    player.clearSolo();
+    player.toggleSolo("mid");
+    await settle();
+    const next = active();
+    assert.notEqual(next, old, "new mix plays from the other element");
+    assert.equal(next.currentTime, 2, "starts where the old mix was");
+    assert.equal(next.paused, false);
+    assert.equal(next.muted, false);
+    assert.equal(old.paused, true);
+    assert.equal(old.muted, false, "left ready for the next handover");
+    const started = events.findIndex(([e, i]) => e === "play" && media[i] === next);
+    const stopped = events.findIndex(([e, i]) => e === "pause" && media[i] === old);
+    assert.ok(started >= 0 && started < stopped, "old mix sounds until new one runs");
+    assert.equal(events[started][2], true, "new mix starts muted, unmuted at handover");
+    assert.equal(events.filter(([e]) => e === "play").length, 1, "one render");
+    assert.equal(player.isPlaying, true);
+    assert.equal(player.getPosition(), 2);
+
+    player.pause();
     player.setMuted("low", true);
     await settle();
-    assert.notEqual(el.src, before, "re-rendered");
-    assert.equal(el.currentTime, 2, "resumed where it was");
-    assert.equal(el.paused, false, "still playing");
-    assert.equal(player.isPlaying, true);
+    assert.equal(active(), old, "paused changes alternate too");
+    assert.equal(old.paused, true, "and stay paused");
+    assert.equal(old.currentTime, 2);
     player.dispose();
   } finally {
     restore();
@@ -228,14 +255,14 @@ test("mix changes swap in at the current position and keep playing", async () =>
 });
 
 test("loop renders just the region and loops it natively", async () => {
-  const { media, blobs, restore } = installFakes([.5]);
+  const { blobs, active, restore } = installFakes([.5]);
   try {
     const player = new LayeredPlayer();
     await player.load([{ id: "a", url: "a", onset: 0 }]);
-    const el = media[0];
     player.setLoopRegion(1, 2);
     player.setLoopEnabled(true);
     await settle();
+    const el = active();
     assert.equal(el.loop, true);
     const size = blobs.get(el.src).size;
     assert.equal(size, 44 + SR * 1 * 2 * 2, "one second, stereo 16-bit");
@@ -254,12 +281,35 @@ test("unlock grants a gesture silently without starting playback", async () => {
   try {
     const player = new LayeredPlayer();
     await player.unlock();
+    for (const el of media) {
+      assert.equal(el.plays, 1, "both elements get the gesture");
+      assert.equal(el.paused, true);
+      assert.equal(el.muted, false);
+    }
     const el = media[0];
-    assert.equal(el.plays, 1);
-    assert.equal(el.paused, true);
-    assert.equal(el.muted, false);
     el.emit("play");
     assert.equal(player.isPlaying, false, "the unlock's own play is ignored");
+    player.dispose();
+  } finally {
+    restore();
+  }
+});
+
+test("a seek while a new mix loads carries over to it", async () => {
+  const { active, restore } = installFakes([.5]);
+  try {
+    const player = new LayeredPlayer();
+    await player.load([{ id: "a", url: "a", onset: 0 }]);
+    player.setLoopRegion(1, 2);
+    player.setLoopEnabled(true);
+    await settle();
+    await player.play();
+    player.setLoopEnabled(false);
+    player.seek(3.5);
+    await settle();
+    assert.equal(active().loop, false);
+    assert.equal(active().currentTime, 3.5, "seek not lost to the loop mix");
+    assert.equal(player.getPosition(), 3.5);
     player.dispose();
   } finally {
     restore();
