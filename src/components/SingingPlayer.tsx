@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { PlayIcon } from "./PlayIcon";
 import { PART_LABELS, PART_SHORT, type PartId, type Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
 import { partsOf, singingInputs } from "../lib/songs";
@@ -65,7 +66,7 @@ export function SingingPlayer(
               onClick={player.toggle}
               aria-label={player.playing ? "Pause" : "Play"}
             >
-              {player.playing ? "❚❚" : "►"}
+              {player.playing ? "❚❚" : <PlayIcon />}
             </button>
             <button
               className="restart-btn"

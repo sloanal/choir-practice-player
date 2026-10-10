@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PlayIcon } from "./PlayIcon";
 import { formatTime } from "../lib/format";
 
 const RATES = [0.75, 0.9, 1, 1.1, 1.25];
@@ -63,7 +64,7 @@ export function SimpleAudioPlayer({ src }: { src: string }) {
           onClick={toggle}
           aria-label={playing ? "Pause" : "Play"}
         >
-          {playing ? "❚❚" : "►"}
+          {playing ? "❚❚" : <PlayIcon />}
         </button>
         <button
           className="restart-btn"
