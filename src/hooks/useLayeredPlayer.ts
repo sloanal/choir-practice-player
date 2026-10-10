@@ -36,6 +36,8 @@ export interface LayeredController {
   setLoopEnabled: (on: boolean) => void;
   setLoopRegion: (start: number, end: number) => void;
   setOnsetDelta: (id: string, delta: number) => void;
+  /** Recent mix handovers (timings), for the ?debug readout. */
+  handovers: readonly string[];
 }
 
 export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
@@ -220,5 +222,6 @@ export function useLayeredPlayer(tracks: TrackInput[]): LayeredController {
     setLoopEnabled,
     setLoopRegion,
     setOnsetDelta,
+    handovers: engineRef.current?.handovers ?? [],
   };
 }

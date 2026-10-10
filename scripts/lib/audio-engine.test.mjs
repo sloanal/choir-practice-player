@@ -35,7 +35,11 @@ function fakeBuffer(samples, seconds = 4) {
 }
 
 /** Installs fakes; returns the created media elements and object-URL blobs. */
-function installFakes(samples) {
+/**
+ * `liveClock` makes currentTime advance in real time while playing, after
+ * `startupMs` of reporting "playing" with a still clock (as iOS does).
+ */
+function installFakes(samples, { liveClock = false, startupMs = 0 } = {}) {
   const media = [];
   const blobs = new Map();
   const events = [];
@@ -72,8 +76,29 @@ function installFakes(samples) {
           ended: false,
           muted: false,
           loop: false,
-          currentTime: 0,
-          playbackRate: 1,
+          _time: 0,
+          _since: null,
+          get currentTime() {
+            if (!liveClock || this._since === null) return this._time;
+            const ran = Math.max(0, performance.now() - this._since - startupMs);
+            return this._time + (ran / 1000) * this.playbackRate;
+          },
+          set currentTime(v) {
+            this._time = v;
+            if (this._since !== null) this._since = performance.now();
+          },
+          _rate: 1,
+          get playbackRate() {
+            return this._rate;
+          },
+          set playbackRate(v) {
+            // Speed changes apply from now on, not to time already played.
+            if (this._since !== null && performance.now() - this._since >= startupMs) {
+              this._time = this.currentTime;
+              this._since = performance.now() - startupMs;
+            }
+            this._rate = v;
+          },
           defaultPlaybackRate: 1,
           attrs: {},
           plays: 0,
@@ -86,7 +111,8 @@ function installFakes(samples) {
             this.attrs.src = v;
             this.seq = ++srcSeq;
             this.paused = true;
-            this.currentTime = 0;
+            this._time = 0;
+            this._since = null;
             this.playbackRate = this.defaultPlaybackRate;
             queueMicrotask(() => this.emit("loadedmetadata"));
           },
@@ -114,11 +140,14 @@ function installFakes(samples) {
           play() {
             this.plays++;
             events.push(["play", media.indexOf(this), this.muted]);
+            if (this.paused) this._since = performance.now();
             this.paused = false;
             return Promise.resolve();
           },
           pause() {
             if (!this.paused) events.push(["pause", media.indexOf(this)]);
+            if (!this.paused) this._time = this.currentTime;
+            this._since = null;
             this.paused = true;
           },
         };
@@ -213,7 +242,11 @@ test("authored zero point, clean trio mix and full-level solo", async () => {
 });
 
 test("mix changes hand over to a second element without a gap", async () => {
-  const { media, events, active, restore } = installFakes([.5]);
+  // iOS-like: "playing" 150 ms before the clock (and the sound) gets going.
+  const { media, events, active, restore } = installFakes([.5], {
+    liveClock: true,
+    startupMs: 150,
+  });
   try {
     const player = new LayeredPlayer();
     await player.load(
@@ -221,33 +254,53 @@ test("mix changes hand over to a second element without a gap", async () => {
     );
     const old = active();
     await player.play();
-    old.currentTime = 2;
+    await new Promise((r) => setTimeout(r, 200));
     events.length = 0;
     // "Just my part": two calls, one render.
     player.clearSolo();
     player.toggleSolo("mid");
-    await settle();
+    // Sample like an ear: some element must be sounding (unmuted, clock
+    // moving) throughout, and the position must never jump.
+    let silentSamples = 0;
+    let last = player.getPosition();
+    let lastAt = performance.now();
+    let maxJump = 0;
+    const until = performance.now() + 1500;
+    while (performance.now() < until) {
+      await new Promise((r) => setTimeout(r, 5));
+      const at = performance.now();
+      const sounding = media.some((m) => !m.paused && !m.muted &&
+        m._since !== null && performance.now() - m._since >= 150);
+      if (!sounding) silentSamples++;
+      const pos = player.getPosition();
+      maxJump = Math.max(maxJump, Math.abs(pos - last - (at - lastAt) / 1000));
+      last = pos;
+      lastAt = at;
+    }
+    assert.equal(silentSamples, 0, "never silent while switching");
+    assert.ok(maxJump < .05, `position continuous (max jump ${maxJump})`);
     const next = active();
     assert.notEqual(next, old, "new mix plays from the other element");
-    assert.equal(next.currentTime, 2, "starts where the old mix was");
     assert.equal(next.paused, false);
     assert.equal(next.muted, false);
+    assert.equal(next.playbackRate, 1, "speed tweak undone");
     assert.equal(old.paused, true);
     assert.equal(old.muted, false, "left ready for the next handover");
     const started = events.findIndex(([e, i]) => e === "play" && media[i] === next);
-    const stopped = events.findIndex(([e, i]) => e === "pause" && media[i] === old);
-    assert.ok(started >= 0 && started < stopped, "old mix sounds until new one runs");
-    assert.equal(events[started][2], true, "new mix starts muted, unmuted at handover");
+    assert.equal(events[started][2], true, "new mix starts muted");
     assert.equal(events.filter(([e]) => e === "play").length, 1, "one render");
     assert.equal(player.isPlaying, true);
-    assert.equal(player.getPosition(), 2);
+    assert.match(player.handovers.at(-1), /switched -?\d+ms apart/);
+    const apart = Number(player.handovers.at(-1).match(/(-?\d+)ms apart/)[1]);
+    assert.ok(Math.abs(apart) <= 10, player.handovers.at(-1));
 
     player.pause();
+    const pausedAt = player.getPosition();
     player.setMuted("low", true);
     await settle();
     assert.equal(active(), old, "paused changes alternate too");
     assert.equal(old.paused, true, "and stay paused");
-    assert.equal(old.currentTime, 2);
+    assert.ok(Math.abs(old.currentTime - pausedAt) < 1e-9);
     player.dispose();
   } finally {
     restore();
@@ -296,7 +349,7 @@ test("unlock grants a gesture silently without starting playback", async () => {
 });
 
 test("a seek while a new mix loads carries over to it", async () => {
-  const { active, restore } = installFakes([.5]);
+  const { active, restore } = installFakes([.5], { liveClock: true });
   try {
     const player = new LayeredPlayer();
     await player.load([{ id: "a", url: "a", onset: 0 }]);
@@ -308,8 +361,8 @@ test("a seek while a new mix loads carries over to it", async () => {
     player.seek(3.5);
     await settle();
     assert.equal(active().loop, false);
-    assert.equal(active().currentTime, 3.5, "seek not lost to the loop mix");
-    assert.equal(player.getPosition(), 3.5);
+    const pos = player.getPosition();
+    assert.ok(pos >= 3.5 && pos < 3.8, `seek not lost to the loop mix (${pos})`);
     player.dispose();
   } finally {
     restore();
