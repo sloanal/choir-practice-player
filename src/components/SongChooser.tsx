@@ -1,5 +1,6 @@
 import type { Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
+import { BackButton } from "./BackButton";
 import { hasExtras, hasSinging, hasTraining, partsOf } from "../lib/songs";
 import { OfflineControls } from "./OfflineControls";
 
@@ -10,9 +11,7 @@ export function SongChooser({ song }: { song: Song }) {
 
   return (
     <div className="chooser">
-      <button className="back" onClick={() => navigate({ name: "home" })}>
-        ← All songs
-      </button>
+      <BackButton fallback={{ name: "home" }} fallbackLabel="All songs" />
       <h1 className="song-heading">{song.title}</h1>
       <p className="muted">How do you want to practice?</p>
 

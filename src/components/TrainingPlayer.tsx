@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PART_LABELS, type PartId, type Song } from "../types";
-import { navigate } from "../hooks/useHashRoute";
+import { BackButton } from "./BackButton";
 import { partsOf, resolveUrl } from "../lib/songs";
 import { SimpleAudioPlayer } from "./SimpleAudioPlayer";
 
@@ -13,9 +13,10 @@ export function TrainingPlayer({ song, myPart }: { song: Song; myPart: PartId })
 
   return (
     <div className="playerpage">
-      <button className="back" onClick={() => navigate({ name: "song", id: song.id })}>
-        ← {song.title}
-      </button>
+      <BackButton
+        fallback={{ name: "song", id: song.id }}
+        fallbackLabel={song.title}
+      />
       <div className="playerpage-head">
         <h1 className="song-heading">{song.title}</h1>
         <span className="mode-tag mode-learn">🎓 Training</span>

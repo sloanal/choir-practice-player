@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { PART_LABELS, PART_SHORT, type PartId, type Song } from "../types";
-import { navigate } from "../hooks/useHashRoute";
+import { BackButton } from "./BackButton";
 import { partsOf, singingInputs } from "../lib/songs";
 import { useLayeredPlayer } from "../hooks/useLayeredPlayer";
 import { formatTime } from "../lib/format";
@@ -39,12 +39,10 @@ export function SingingPlayer(
 
   return (
     <div className="playerpage">
-      <button
-        className="back"
-        onClick={() => navigate({ name: "song", id: song.id })}
-      >
-        ← {song.title}
-      </button>
+      <BackButton
+        fallback={{ name: "song", id: song.id }}
+        fallbackLabel={song.title}
+      />
       <div className="playerpage-head">
         <h1 className="song-heading">{song.title}</h1>
         <span className="mode-tag mode-sing">🎧 Singing</span>

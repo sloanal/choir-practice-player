@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type ExtraTrack, PART_LABELS, type PartId, type Song } from "../types";
 import { navigate } from "../hooks/useHashRoute";
+import { BackButton } from "./BackButton";
 import { hasExtras, partsOf, resolveUrl } from "../lib/songs";
 import { SimpleAudioPlayer } from "./SimpleAudioPlayer";
 
@@ -48,12 +49,10 @@ function ExtraItem({ extra, myPart }: { extra: ExtraTrack; myPart: PartId }) {
 export function SongExtras({ song, myPart }: { song: Song; myPart: PartId }) {
   return (
     <div className="playerpage">
-      <button
-        className="back"
-        onClick={() => navigate({ name: "song", id: song.id })}
-      >
-        ← {song.title}
-      </button>
+      <BackButton
+        fallback={{ name: "song", id: song.id }}
+        fallbackLabel={song.title}
+      />
       <div className="playerpage-head">
         <h1 className="song-heading">{song.title}</h1>
         <span className="mode-tag mode-bits">🧩 Bits &amp; Bobs</span>
@@ -80,15 +79,11 @@ export function BitsAndBobsHome({
   general: ExtraTrack[];
   myPart: PartId;
 }) {
-  const withExtras = songs
-    .filter(hasExtras)
-    .sort((a, b) => a.title.localeCompare(b.title));
+  const entries = uniqueExtras(songs);
 
   return (
     <div className="playerpage">
-      <button className="back" onClick={() => navigate({ name: "home" })}>
-        ← All songs
-      </button>
+      <BackButton fallback={{ name: "home" }} fallbackLabel="All songs" />
       <div className="playerpage-head">
         <h1 className="song-heading">Bits &amp; Bobs</h1>
         <span className="mode-tag mode-bits">🧩 Extras</span>
@@ -101,13 +96,13 @@ export function BitsAndBobsHome({
         <ExtraItem key={extra.id} extra={extra} myPart={myPart} />
       ))}
       <ul className="cards bits-songs">
-        {withExtras.map((song) => (
+        {entries.map(({ song, title }) => (
           <li key={song.id}>
             <button
               className="card"
               onClick={() => navigate({ name: "extras", id: song.id })}
             >
-              <span className="card-title">{song.title}</span>
+              <span className="card-title">{title}</span>
               <span className="card-badges">
                 {song.extras!.map((extra) => (
                   <span key={extra.id} className="badge badge-bits">
@@ -121,4 +116,26 @@ export function BitsAndBobsHome({
       </ul>
     </div>
   );
+}
+
+// Songs split into sections (e.g. "The Chain (Chorus)", "The Chain (Outro)")
+// share the same extras, so list each set of extras once, under the song's
+// base title.
+function uniqueExtras(songs: Song[]): { song: Song; title: string }[] {
+  const groups = new Map<string, Song[]>();
+  for (const song of [...songs].filter(hasExtras).sort((a, b) =>
+    a.title.localeCompare(b.title),
+  )) {
+    const key = song.extras!.map((e) => e.id).sort().join("|");
+    groups.set(key, [...(groups.get(key) ?? []), song]);
+  }
+  return [...groups.values()]
+    .map((group) => ({
+      song: group[0],
+      title:
+        group.length > 1
+          ? group[0].title.replace(/\s*\([^)]*\)\s*$/, "")
+          : group[0].title,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title));
 }
