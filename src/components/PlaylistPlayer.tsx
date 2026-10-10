@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { PlayIcon } from "./PlayIcon";
+import { BackTenButton, Scrubber } from "./Scrubber";
 import { PART_SHORT, type PartId, type Song } from "../types";
 import { type RepeatMode, usePlaylistPlayer } from "../hooks/usePlaylistPlayer";
-import { formatTime } from "../lib/format";
 
 const REPEAT_LABELS: Record<RepeatMode, string> = {
   off: "Repeat off",
@@ -48,7 +48,6 @@ export function PlaylistPlayer(
   }
 
   const ready = pl.status === "ready";
-  const pct = pl.duration > 0 ? (pl.position / pl.duration) * 100 : 0;
 
   return (
     <section className="playlist" aria-label="Singing playlist">
@@ -86,6 +85,10 @@ export function PlaylistPlayer(
         >
           <PrevIcon />
         </button>
+        <BackTenButton
+          onClick={() => pl.seek(Math.max(0, pl.position - 10))}
+          disabled={!ready}
+        />
         <button
           className="play-btn"
           onClick={pl.toggle}
@@ -102,25 +105,12 @@ export function PlaylistPlayer(
         >
           <NextIcon />
         </button>
-        <div className="scrub">
-          <div className="scrub-track">
-            <div className="scrub-fill" style={{ width: `${pct}%` }} />
-            <input
-              type="range"
-              min={0}
-              max={pl.duration || 0}
-              step={0.01}
-              value={Math.min(pl.position, pl.duration || 0)}
-              disabled={!ready}
-              onChange={(e) => pl.seek(Number(e.target.value))}
-              aria-label="Seek"
-            />
-          </div>
-          <div className="times">
-            <span>{formatTime(pl.position)}</span>
-            <span>{formatTime(pl.duration)}</span>
-          </div>
-        </div>
+        <Scrubber
+          value={pl.position}
+          duration={pl.duration}
+          onSeek={pl.seek}
+          disabled={!ready}
+        />
       </div>
 
       <div className="controls-row">

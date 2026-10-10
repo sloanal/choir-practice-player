@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { PlayIcon } from "./PlayIcon";
+import { BackTenButton, Scrubber } from "./Scrubber";
 import { PART_LABELS, PART_SHORT, type PartId, type Song } from "../types";
 import { BackButton } from "./BackButton";
 import { partsOf, singingInputs } from "../lib/songs";
 import { useLayeredPlayer } from "../hooks/useLayeredPlayer";
-import { formatTime } from "../lib/format";
 
 const RATES = [0.75, 0.9, 1, 1.1, 1.25];
 
@@ -21,9 +21,6 @@ export function SingingPlayer(
   const player = useLayeredPlayer(inputs);
   const [showAlign, setShowAlign] = useState(false);
 
-  const pct = player.duration > 0
-    ? (player.position / player.duration) * 100
-    : 0;
   const loopStartPct = player.duration > 0
     ? (player.loop.start / player.duration) * 100
     : 0;
@@ -74,32 +71,24 @@ export function SingingPlayer(
             >
               ⏮
             </button>
-            <div className="scrub">
-              <div className="scrub-track">
-                {player.loop.on && (
-                  <div
-                    className="loop-region"
-                    style={{
-                      left: `${loopStartPct}%`,
-                      width: `${Math.max(0, loopEndPct - loopStartPct)}%`,
-                    }}
-                  />
-                )}
-                <div className="scrub-fill" style={{ width: `${pct}%` }} />
-                <input
-                  type="range"
-                  min={0}
-                  max={player.duration || 0}
-                  step={0.01}
-                  value={Math.min(player.position, player.duration || 0)}
-                  onChange={(e) => player.seek(Number(e.target.value))}
+            <BackTenButton
+              onClick={() => player.seek(Math.max(0, player.position - 10))}
+            />
+            <Scrubber
+              value={player.position}
+              duration={player.duration}
+              onSeek={player.seek}
+            >
+              {player.loop.on && (
+                <div
+                  className="loop-region"
+                  style={{
+                    left: `${loopStartPct}%`,
+                    width: `${Math.max(0, loopEndPct - loopStartPct)}%`,
+                  }}
                 />
-              </div>
-              <div className="times">
-                <span>{formatTime(player.position)}</span>
-                <span>{formatTime(player.duration)}</span>
-              </div>
-            </div>
+              )}
+            </Scrubber>
           </div>
 
           <div className="quick-actions">
