@@ -33,7 +33,8 @@ Dropbox shared folder  ──(local sync/import)──────────�
   live Web Audio output) keeps playback smooth over Bluetooth receivers such as
   car stereos and lets it continue with the screen locked. Changing a part's
   volume, mute/solo, alignment or the loop re-renders the mix (well under a
-  second) and swaps it in at the current position. Peak-aware mix headroom
+  second) into a second `<audio>` element, which starts muted in step with the
+  first and takes over in the same instant, so the sound never pauses. Peak-aware mix headroom
   prevents the three aligned parts from clipping together; solo playback keeps
   its normal level.
   Because all audio is served same‑origin (baked into

@@ -53,17 +53,29 @@ export interface TrackState {
 
 /** Every rendered part is 44.1 kHz; decoding at that rate avoids resampling. */
 const MIX_SAMPLE_RATE = 44100;
-/** Coalesces bursts of mix changes (e.g. dragging a volume slider). */
-const RENDER_DELAY_MS = 120;
+/** Lets a volume-slider drag settle before re-rendering the mix. */
+const SLIDER_RENDER_DELAY_MS = 120;
+/** How closely the incoming mix must match the outgoing one at handover. */
+const SYNC_TOLERANCE_SECONDS = 0.012;
+const SYNC_ATTEMPTS = 3;
 /** Fade at loop edges so the wrap-around does not click. */
 const LOOP_FADE_SECONDS = 0.005;
 
 export class LayeredPlayer {
   private decoder: BaseAudioContext;
-  private el: HTMLAudioElement;
+  /**
+   * Two elements: one plays the current mix while the other loads the next
+   * one, so a mix change hands over without a pause in the sound.
+   */
+  private els: [HTMLAudioElement, HTMLAudioElement];
+  private active = 0;
   private mixUrl: string | null = null;
-  /** Timeline position where the current mix begins (loop start, or 0). */
+  /** The active element holds a mix of the current tracks. */
+  private mixReady = false;
+  /** Timeline range the current mix covers: [loop start, loop end) or all. */
   private mixStart = 0;
+  private mixEnd = 0;
+  private mixLoops = false;
   private masterVolume = 1;
   private tracks: Track[] = [];
 
@@ -78,32 +90,16 @@ export class LayeredPlayer {
   private loadToken = 0;
   private renderToken = 0;
   private renderTimer: ReturnType<typeof setTimeout> | null = null;
-  /** While a new mix loads, the element's clock is meaningless. */
-  private swapping = false;
+  /** A new mix is loading; seeks meanwhile must carry over to it. */
+  private rendering = false;
+  private pendingSeek: number | null = null;
   private disposed = false;
 
   onEnded: (() => void) | null = null;
 
   constructor() {
     this.decoder = createDecoder();
-    const el = window.document.createElement("audio");
-    el.preload = "auto";
-    el.setAttribute("playsinline", "");
-    setPreservesPitch(el, false);
-    el.addEventListener("ended", () => this.handleNaturalEnd());
-    // Lock-screen, headphone and car controls act on the element directly.
-    el.addEventListener("pause", () => {
-      if (this.swapping || !this.playing || el.ended) return;
-      this.pausedPos = this.getPosition();
-      this.playing = false;
-    });
-    el.addEventListener("play", () => {
-      if (this.swapping || this.playing || el.paused) return;
-      if (this.tracks.length === 0) return;
-      this.pausedPos = this.getPosition();
-      this.playing = true;
-    });
-    this.el = el;
+    this.els = [this.createElement(), this.createElement()];
   }
 
   /**
@@ -118,7 +114,8 @@ export class LayeredPlayer {
     const token = ++this.loadToken;
     this.cancelScheduledRender();
     this.playing = false;
-    this.el.pause();
+    this.mixReady = false;
+    for (const el of this.els) el.pause();
     this.pausedPos = 0;
     this.loopOn = false;
     this.loopStart = 0;
@@ -174,7 +171,7 @@ export class LayeredPlayer {
   }
 
   getPosition(): number {
-    if (!this.playing || this.swapping) return this.pausedPos;
+    if (!this.playing || !this.mixReady) return this.pausedPos;
     return Math.min(this.mixStart + this.el.currentTime, this.duration);
   }
 
@@ -197,33 +194,28 @@ export class LayeredPlayer {
    */
   async unlock(): Promise<void> {
     if (this.playing) return;
-    const el = this.el;
-    if (!el.getAttribute("src")) el.src = silentUrl();
-    el.muted = true;
-    const played = el.play();
-    el.pause();
-    el.muted = false;
-    played?.catch(() => {
-      // The pause above aborts it; the gesture has still been granted.
-    });
+    for (const el of this.els) prime(el);
   }
 
   async play(): Promise<void> {
     if (this.playing) return;
+    // Synchronous, so the tap that called us counts as the gesture for both.
+    prime(this.standby);
     if (this.tracks.length === 0) {
-      await this.unlock();
+      prime(this.el);
       return;
     }
     let from = this.pausedPos;
     if (from >= this.duration - 0.02) from = this.loopOn ? this.loopStart : 0;
     this.moveTo(from);
     this.playing = true;
-    // Synchronous so the tap that called us still counts as the gesture.
+    // Still loading: the mix starts itself once it is ready.
+    if (!this.mixReady) return;
     const played = this.el.play();
     try {
       await played;
     } catch (err) {
-      // A newer src (mix swap) aborts it; the swap resumes playback itself.
+      // A pause right after aborts it harmlessly; only a refusal matters.
       if ((err as { name?: string })?.name === "NotAllowedError") {
         this.playing = false;
       }
@@ -234,7 +226,7 @@ export class LayeredPlayer {
     if (!this.playing) return;
     this.pausedPos = this.getPosition();
     this.playing = false;
-    this.el.pause();
+    for (const el of this.els) el.pause();
   }
 
   async toggle(): Promise<void> {
@@ -275,14 +267,14 @@ export class LayeredPlayer {
 
   setMasterVolume(v: number): void {
     this.masterVolume = Math.max(0, Math.min(1, v));
-    this.scheduleRender();
+    this.scheduleRender(SLIDER_RENDER_DELAY_MS);
   }
 
   setVolume(id: string, v: number): void {
     const t = this.track(id);
     if (!t) return;
     t.volume = v;
-    this.scheduleRender();
+    this.scheduleRender(SLIDER_RENDER_DELAY_MS);
   }
 
   setMuted(id: string, muted: boolean): void {
@@ -318,15 +310,47 @@ export class LayeredPlayer {
     this.cancelScheduledRender();
     this.renderToken++;
     this.playing = false;
-    const el = this.el;
-    el.pause();
-    el.removeAttribute("src");
-    el.load();
+    for (const el of this.els) {
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+    }
     if (this.mixUrl) URL.revokeObjectURL(this.mixUrl);
     this.mixUrl = null;
   }
 
   // --- internals ---
+
+  private get el(): HTMLAudioElement {
+    return this.els[this.active];
+  }
+
+  private get standby(): HTMLAudioElement {
+    return this.els[1 - this.active];
+  }
+
+  private createElement(): HTMLAudioElement {
+    const el = window.document.createElement("audio");
+    el.preload = "auto";
+    el.setAttribute("playsinline", "");
+    setPreservesPitch(el, false);
+    el.addEventListener("ended", () => {
+      if (el === this.el) this.handleNaturalEnd();
+    });
+    // Lock-screen, headphone and car controls act on the element directly.
+    el.addEventListener("pause", () => {
+      if (el !== this.el || !this.playing || el.ended) return;
+      this.pausedPos = this.getPosition();
+      this.playing = false;
+    });
+    el.addEventListener("play", () => {
+      if (el !== this.el || this.playing || el.paused) return;
+      if (!this.mixReady) return;
+      this.pausedPos = this.getPosition();
+      this.playing = true;
+    });
+    return el;
+  }
 
   private track(id: string): Track | undefined {
     return this.tracks.find((t) => t.id === id);
@@ -355,7 +379,10 @@ export class LayeredPlayer {
       pos = this.loopStart;
     }
     this.pausedPos = pos;
-    if (!this.swapping) this.el.currentTime = Math.max(0, pos - this.mixStart);
+    if (this.rendering) this.pendingSeek = pos;
+    if (this.mixReady) {
+      this.el.currentTime = mixTime(pos, this.mixStart, this.mixEnd, this.mixLoops);
+    }
   }
 
   /**
@@ -368,13 +395,18 @@ export class LayeredPlayer {
     void this.renderNow().catch(() => undefined);
   }
 
-  private scheduleRender(): void {
+  /**
+   * Re-render shortly. Several calls in a row (e.g. clear solo, then solo one
+   * part) coalesce into one render; sliders wait a little longer for the
+   * drag to settle.
+   */
+  private scheduleRender(delay = 0): void {
     if (this.tracks.length === 0 || this.disposed) return;
     this.cancelScheduledRender();
     this.renderTimer = setTimeout(() => {
       this.renderTimer = null;
       void this.renderNow().catch(() => undefined);
-    }, RENDER_DELAY_MS);
+    }, delay);
   }
 
   private cancelScheduledRender(): void {
@@ -382,54 +414,138 @@ export class LayeredPlayer {
     this.renderTimer = null;
   }
 
-  /** Mix the current settings and swap the result in at the playhead. */
+  /**
+   * Mix the current settings into the standby element, then make it the
+   * active one. While playing, the old mix keeps sounding until the new one
+   * is running in step with it, so the change is heard without a gap.
+   */
   private async renderNow(): Promise<void> {
     this.cancelScheduledRender();
     const token = ++this.renderToken;
-    const pos = this.getPosition();
-    const start = this.loopOn ? this.loopStart : 0;
-    const end = this.loopOn ? this.loopEnd : this.duration;
+    const stale = () => token !== this.renderToken || this.disposed;
+    this.rendering = true;
+    const loop = this.loopOn;
+    const start = loop ? this.loopStart : 0;
+    const end = loop ? this.loopEnd : this.duration;
     const wav = mixToWav(
       this.tracks,
       this.mixGains(),
       start,
       end,
-      this.loopOn ? LOOP_FADE_SECONDS : 0,
+      loop ? LOOP_FADE_SECONDS : 0,
     );
     const url = URL.createObjectURL(wav);
 
-    const el = this.el;
-    this.pausedPos = pos;
-    this.swapping = true;
-    el.loop = this.loopOn;
-    el.src = url;
+    const next = this.standby;
+    next.pause();
+    next.muted = true;
+    next.loop = loop;
+    next.src = url;
     try {
-      await whenLoaded(el);
+      await whenLoaded(next);
     } catch (err) {
       URL.revokeObjectURL(url);
-      if (token === this.renderToken) this.swapping = false;
+      if (!stale()) this.rendering = false;
       throw err;
     }
-    if (token !== this.renderToken) {
+    if (stale()) {
       URL.revokeObjectURL(url);
       return;
     }
-    if (this.mixUrl) URL.revokeObjectURL(this.mixUrl);
+    next.defaultPlaybackRate = this.rate;
+    next.playbackRate = this.rate;
+
+    let inStep = false;
+    if (this.playing && this.mixReady) {
+      inStep = await this.startInStep(next, start, end, loop, stale);
+      if (stale()) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+    }
+
+    const old = this.el;
+    const oldUrl = this.mixUrl;
+    this.rendering = false;
+    this.pendingSeek = null;
+    this.active = 1 - this.active;
     this.mixUrl = url;
     this.mixStart = start;
-    this.swapping = false;
-    el.defaultPlaybackRate = this.rate;
-    el.playbackRate = this.rate;
-    this.moveTo(this.pausedPos);
-    if (this.playing) {
-      el.play()?.catch(() => {
-        // Superseded by a newer swap, or the OS refused; state stays correct.
-      });
+    this.mixEnd = end;
+    this.mixLoops = loop;
+    this.mixReady = true;
+    if (inStep && this.playing) {
+      // Same tick: the new mix takes over exactly where the old one was.
+      next.muted = false;
+      old.muted = true;
+      old.pause();
+      old.muted = false;
+    } else {
+      old.pause();
+      if (!this.playing) next.pause();
+      next.muted = false;
+      this.moveTo(this.pausedPos);
+      if (this.playing) {
+        next.play()?.catch(() => {
+          // The OS refused (no gesture yet); the next tap on Play retries.
+        });
+      }
     }
+    if (oldUrl) URL.revokeObjectURL(oldUrl);
+  }
+
+  /**
+   * Start `next` (muted) at the playhead and correct it until it runs in step
+   * with the active element. Resolves whether it is in step; a jump (the loop
+   * moved the playhead) needs no matching.
+   */
+  private async startInStep(
+    next: HTMLAudioElement,
+    start: number,
+    end: number,
+    loop: boolean,
+    stale: () => boolean,
+  ): Promise<boolean> {
+    const drift = () => {
+      const len = end - start;
+      let d = this.getPosition() - (start + next.currentTime);
+      if (loop && len > 0) d = ((d % len) + len * 1.5) % len - len / 2;
+      return d;
+    };
+    // A seek while this mix loaded moves the playhead: start there instead.
+    const seek = this.pendingSeek;
+    const pos = seek ?? this.getPosition();
+    const jump = seek !== null || pos < start || pos >= end;
+    // Startup and seek latency, measured and compensated as we go.
+    let lead = 0;
+    const target = seek ?? (jump ? start : pos);
+    next.currentTime = mixTime(target, start, end, loop);
+    try {
+      await next.play();
+    } catch {
+      return false;
+    }
+    if (jump) {
+      // Recheck: another seek may have arrived while it started.
+      if (this.pendingSeek !== null && this.pendingSeek !== target) {
+        next.currentTime = mixTime(this.pendingSeek, start, end, loop);
+      }
+      return true;
+    }
+    for (let attempt = 0; attempt < SYNC_ATTEMPTS; attempt++) {
+      if (stale() || !this.playing) return false;
+      const d = drift();
+      if (Math.abs(d) <= SYNC_TOLERANCE_SECONDS) return true;
+      lead += d;
+      next.currentTime = mixTime(this.getPosition() + lead, start, end, loop);
+      await whenEvent(next, "seeked");
+    }
+    // Close enough; a few milliseconds beats stalling the change.
+    return !stale() && this.playing && Math.abs(drift()) < 0.25;
   }
 
   private handleNaturalEnd(): void {
-    if (!this.playing || this.swapping || this.loopOn) return;
+    if (!this.playing || this.mixLoops) return;
     this.playing = false;
     this.pausedPos = this.duration;
     this.onEnded?.();
@@ -519,6 +635,43 @@ function silentUrl(): string {
     encodeWav([new Float32Array(MIX_SAMPLE_RATE / 10)], MIX_SAMPLE_RATE),
   );
   return silentWavUrl;
+}
+
+/** Where timeline position `pos` falls within a mix covering [start, end). */
+function mixTime(pos: number, start: number, end: number, loop: boolean): number {
+  const len = Math.max(0, end - start);
+  const t = pos - start;
+  if (loop && len > 0) return ((t % len) + len) % len;
+  return Math.max(0, Math.min(t, len));
+}
+
+/**
+ * Play then pause in the same tick: silent, but on mobile Safari it marks the
+ * element as started by the user, so later gesture-less play() is allowed.
+ */
+function prime(el: HTMLAudioElement): void {
+  if (!el.getAttribute("src")) el.src = silentUrl();
+  const muted = el.muted;
+  el.muted = true;
+  const played = el.play();
+  el.pause();
+  el.muted = muted;
+  played?.catch(() => {
+    // The pause above aborts it; the gesture has still been granted.
+  });
+}
+
+/** Resolves on `type`, or after a timeout so a missed event cannot hang us. */
+function whenEvent(el: HTMLAudioElement, type: string, ms = 1000): Promise<void> {
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      el.removeEventListener(type, done);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    el.addEventListener(type, done);
+  });
 }
 
 function whenLoaded(el: HTMLAudioElement): Promise<void> {
